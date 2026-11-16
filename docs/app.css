@@ -21,6 +21,7 @@
   --seq-4: #1c5cab;
   --seq-5: #0d366b;
   --nodata: #c9cfd8;
+  --ctrl-invert: 0;
   --shadow: 0 1px 2px rgba(14, 23, 38, 0.08), 0 6px 20px rgba(14, 23, 38, 0.08);
   --font-text: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-label: "Barlow Condensed", "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -47,6 +48,7 @@
     --seq-4: #86b6ef;
     --seq-5: #d6e7fc;
     --nodata: #333f50;
+    --ctrl-invert: 1;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
     color-scheme: dark;
   }
@@ -72,6 +74,7 @@
   --seq-4: #86b6ef;
   --seq-5: #d6e7fc;
   --nodata: #333f50;
+  --ctrl-invert: 1;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
   color-scheme: dark;
 }
@@ -210,9 +213,9 @@ h1, h2, h3, p { margin: 0; }
   .legende { bottom: 20px; padding: 7px 10px 8px; }
   .legende ol { gap: 1px; }
 }
-#map { position: absolute; inset: 0; background: var(--map-bg); font-family: var(--font-text); }
+#map { position: absolute; inset: 0; background: var(--map-bg); }
 .ebenen, .legende {
-  position: absolute; z-index: 500; left: 12px;
+  position: absolute; z-index: 5; left: 12px;
   background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow);
 }
 .ebenen { top: 12px; width: 246px; max-width: calc(100% - 70px); }
@@ -233,7 +236,7 @@ h1, h2, h3, p { margin: 0; }
 .haken .muster { flex: none; width: 18px; height: 12px; }
 .muster.verfahren { border: 2px dashed var(--plan); background: var(--plan-soft); }
 .muster.recht { border: 1.5px solid var(--ink-2); }
-.muster.bahn { width: 10px; height: 10px; margin: 0 4px; background: var(--ink); border: 2px solid var(--surface); outline: 1px solid var(--ink); }
+.muster.bahn { width: 10px; height: 10px; margin: 0 4px; border-radius: 50%; background: var(--ink); border: 2px solid var(--surface); outline: 1px solid var(--ink); }
 .legende { bottom: 22px; padding: 9px 12px 10px; max-width: calc(100% - 24px); }
 .legende h3 { font-family: var(--font-label); font-size: 14px; font-weight: 600; letter-spacing: 0.02em; margin-bottom: 6px; }
 .legende ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; }
@@ -241,28 +244,23 @@ h1, h2, h3, p { margin: 0; }
 .legende li i { flex: none; width: 18px; height: 12px; border-radius: 2px; border: 1px solid rgba(127, 127, 127, 0.35); }
 .legende .fuss { margin-top: 6px; font-size: 11.5px; color: var(--muted); max-width: 210px; }
 
-.leaflet-container a { color: var(--accent); }
-.leaflet-bar a, .leaflet-bar a:hover { background: var(--surface); color: var(--ink); border-bottom-color: var(--line); }
-.leaflet-bar { border: 1px solid var(--line) !important; box-shadow: var(--shadow) !important; }
-.leaflet-control-attribution { background: var(--halo) !important; color: var(--muted) !important; font-size: 11px; }
-.leaflet-tooltip.tipp {
+.ansicht { display: flex; gap: 6px; }
+.ansicht .knopf { box-shadow: var(--shadow); padding: 6px 11px; }
+.kein-webgl { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--ink-2); }
+.maplibregl-map { font-family: var(--font-text); }
+.maplibregl-ctrl-group { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow) !important; }
+.maplibregl-ctrl-group button + button { border-top-color: var(--line); }
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(var(--ctrl-invert)); }
+.maplibregl-ctrl-attrib { background: var(--halo) !important; color: var(--muted); font-size: 11px; }
+.maplibregl-ctrl-attrib a { color: var(--muted); }
+.maplibregl-popup.tipp { pointer-events: none; z-index: 6; }
+.maplibregl-popup.tipp .maplibregl-popup-content {
   background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
-  box-shadow: var(--shadow); padding: 6px 9px; font-size: 13px; line-height: 1.35; white-space: normal; max-width: 250px; min-width: 120px;
+  box-shadow: var(--shadow); padding: 6px 9px; font-size: 13px; line-height: 1.35; min-width: 120px;
 }
-.leaflet-tooltip.tipp::before { display: none; }
+.maplibregl-popup.tipp .maplibregl-popup-tip { display: none; }
 .tipp b { font-weight: 600; }
 .tipp span { color: var(--ink-2); }
-.ortsname {
-  font-family: var(--font-label); font-size: 13px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink);
-  text-align: center; white-space: nowrap; pointer-events: none;
-  text-shadow: 0 0 3px var(--halo), 0 0 3px var(--halo), 0 0 3px var(--halo), 0 0 2px var(--halo);
-  transform: translate(-50%, -50%); width: max-content;
-}
-.bahnhof { width: 10px; height: 10px; background: var(--ink); border: 2px solid var(--surface); outline: 1px solid var(--ink); }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88); }
-}
-:root[data-theme="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88); }
 
 /* ------------------------------------------------------------ Steckbrief */
 .steckbrief {
@@ -350,7 +348,7 @@ table.zahlen td.r, table.zahlen th.r { text-align: right; font-variant-numeric: 
   .rolle { overflow: visible; }
   .klappe-inhalt { max-height: none; }
   .segmente button { padding: 6px 10px; }
-  .ebenen { width: 220px; }
+  .ebenen { width: 200px; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .balken > i, .meter-zeile .spur i { transition: width 0.25s ease; }

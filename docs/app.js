@@ -113,74 +113,241 @@
   }
 
   /* ---------------------------------------------------------- Karte */
-  const map = L.map('map', { zoomSnap: 0.25, minZoom: 10, maxZoom: 18, attributionControl: true });
-  map.attributionControl.setPrefix('');
-  map.zoomControl.setPosition('topright');
-  map.attributionControl.addAttribution('Daten: Stadt Münster, Gutachterausschuss Münster, Stadtwerke Münster (dl-de/by-2-0)');
-  ['flaeche', 'zonen', 'recht', 'verfahren', 'auswahl'].forEach((name, i) => { map.createPane(name).style.zIndex = 410 + i * 10; });
-  map.getPane('auswahl').style.pointerEvents = 'none';
+  // Farben der Karte je Theme. Dach- und Baumfarben sind Darstellung, keine Messwerte.
+  const PALETTE = {
+    hell: {
+      grund: '#e6e9e4',
+      nutz: { acker: '#efeedd', gruenland: '#e2ebd0', natur: '#cfe0b6', wald: '#b9d4a3', park: '#d2e6bd', wohnen: '#ece7df', misch: '#e8e0d9', gewerbe: '#dfe0e8', sonst: '#e4e2d9', wasser: '#a6cbea', weg: '#f6f3ea', bahn: '#c9c9d1', strasse: '#ffffff' },
+      wand: [[244, 239, 230], [226, 229, 236], [240, 231, 218], [224, 221, 214]],
+      dach: [[181, 83, 60], [168, 73, 47], [150, 84, 66], [110, 113, 122], [92, 97, 107], [160, 104, 78]],
+      flach: [[203, 202, 196], [188, 193, 202], [205, 198, 188], [196, 194, 188]],
+      baum: [[88, 140, 72], [104, 154, 80], [76, 128, 70], [120, 160, 84]],
+      dunst: [228, 234, 241], himmel: '#bcd8f2', horizont: '#eef3f8',
+    },
+    dunkel: {
+      grund: '#0b1016',
+      nutz: { acker: '#141a18', gruenland: '#15201a', natur: '#17261d', wald: '#162b1e', park: '#1a2c20', wohnen: '#1c212a', misch: '#1f222c', gewerbe: '#1e2130', sonst: '#191d23', wasser: '#10304f', weg: '#282e38', bahn: '#3a3f4b', strasse: '#353d4a' },
+      wand: [[66, 77, 95], [58, 69, 90], [72, 79, 95], [50, 59, 73]],
+      dach: [[122, 68, 58], [106, 60, 54], [82, 91, 110], [72, 81, 99], [96, 103, 120]],
+      flach: [[84, 95, 113], [76, 88, 108], [88, 97, 113], [66, 75, 91]],
+      baum: [[46, 96, 62], [54, 108, 68], [40, 86, 58]],
+      dunst: [13, 19, 28], himmel: '#08121f', horizont: '#1b2738',
+    },
+  };
+  const dunkel = () => {
+    const t = document.documentElement.getAttribute('data-theme');
+    return t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  };
+  const pal = () => PALETTE[dunkel() ? 'dunkel' : 'hell'];
+  const K = window.SCOUT_MAP;
+  const nutzFarbe = () => { const p = pal().nutz, a = ['match', ['get', 'k']]; K.meta.klassen.forEach((name, i) => a.push(i, p[name])); a.push(p.sonst); return a; };
 
-  // Hintergrundkarte: nur wenn die Kacheln geladen werden dürfen (sonst reicht die Flächenkarte).
-  let kachelnDa = false, kachelFehler = 0;
-  const kacheln = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap-Mitwirkende' });
-  kacheln.on('tileload', () => { if (!kachelnDa) { kachelnDa = true; zeichneFlaechen(); } });
-  kacheln.on('tileerror', () => { if (!kachelnDa && ++kachelFehler >= 3) map.removeLayer(kacheln); });
-  kacheln.addTo(map);
-
-  const tipp = { sticky: true, className: 'tipp', direction: 'top', offset: [0, -6], opacity: 1 };
-  const stadtteilLayer = L.geoJSON(D.stadtteile, { pane: 'flaeche' }).addTo(map);
-  stadtteilLayer.eachLayer((l) => {
-    const id = l.feature.properties.id;
-    l.bindTooltip(() => tippStadtteil(id), tipp);
-    l.on('mouseover', () => markiereZeile(id, true));
-    l.on('mouseout', () => markiereZeile(id, false));
-  });
+  const leer = { type: 'FeatureCollection', features: [] };
+  const punkte = (liste) => ({ type: 'FeatureCollection', features: liste.map((x) => ({ type: 'Feature', properties: { name: x[0] }, geometry: { type: 'Point', coordinates: [x[1], x[2]] } })) });
   const zonenBauland = { type: 'FeatureCollection', features: D.zonen.features.filter((f) => f.properties.gruppe !== 'sonst') };
-  const zonenLayer = L.geoJSON(zonenBauland, { pane: 'zonen' });
-  zonenLayer.eachLayer((l) => {
-    const p = l.feature.properties;
-    l.bindTooltip(`<b>${esc(p.nuta_text)}</b><br><span>${zahl(p.brw, 0)} €/m² · Zone ${esc(p.nr)}, ${esc(p.ort)}</span>`, tipp);
-  });
-  const rechtLayer = L.geoJSON(D.bplan_recht, { pane: 'recht' });
-  rechtLayer.eachLayer((l) => {
-    const p = l.feature.properties;
-    l.bindTooltip(`<b>B-Plan ${esc(p.plannr)}</b>${p.jahr ? ' · seit ' + p.jahr : ''}<br><span>${esc(p.name)}</span>`, tipp);
-  });
-  const verfahrenLayer = L.geoJSON(D.bplan_verfahren, { pane: 'verfahren' }).addTo(map);
-  verfahrenLayer.eachLayer((l) => {
-    const p = l.feature.properties;
-    l.bindTooltip(`<b>B-Plan ${esc(p.plannr)} · im Verfahren</b><br><span>${esc(p.name)} · ${zahl(p.ha, 1)} ha</span>`, tipp);
-  });
-  const bahnLayer = L.layerGroup(D.bahn.map((b) => L.marker([b.lat, b.lon], {
-    icon: L.divIcon({ className: 'bahnhof', iconSize: [10, 10] }), keyboard: false,
-  }).bindTooltip(`<b>${esc(b.name)}</b><br><span>Bahnhof / Haltepunkt</span>`, Object.assign({}, tipp, { sticky: false })))).addTo(map);
-  const namenLayer = L.layerGroup(IDS.map((id) => {
-    const p = STT[id].properties;
-    const m = L.marker([p.lat, p.lon], { interactive: false, keyboard: false, icon: L.divIcon({ className: '', iconSize: [0, 0], html: `<div class="ortsname">${esc(p.name)}</div>` }) });
-    m.sid = id;
-    return m;
-  })).addTo(map);
-  // Auswahl: helle Unterlage plus dunkle Linie, damit der Umriss auf jeder Farbstufe sichtbar bleibt.
-  const auswahlRand = L.geoJSON(null, { pane: 'auswahl', interactive: false }).addTo(map);
-  const auswahlLayer = L.geoJSON(null, { pane: 'auswahl', interactive: false }).addTo(map);
-  let punktMarker = null;
+  const uebersicht = { type: 'FeatureCollection', features: K.meta.klassen.filter((k) => K.uebersicht[k]).map((k) => ({ type: 'Feature', properties: { k: K.meta.klassen.indexOf(k) }, geometry: K.uebersicht[k] })) };
+  const GRENZEN = (function () { let a = 180, b = 90, c = -180, d = -90; IDS.forEach((id) => { const r = STT[id].bbox; a = Math.min(a, r[0]); b = Math.min(b, r[1]); c = Math.max(c, r[2]); d = Math.max(d, r[3]); }); return [[a, b], [c, d]]; })();
 
-  function zeigeNamen() {
-    namenLayer.eachLayer((m) => {
-      if (!m.getElement()) return;
-      const b = STT[m.sid].bbox;
-      const a = map.latLngToContainerPoint([b[1], b[0]]), c = map.latLngToContainerPoint([b[3], b[2]]);
-      const passt = Math.abs(c.x - a.x) > m.getElement().firstChild.offsetWidth + 14 && Math.abs(c.y - a.y) > 30;
-      m.getElement().style.visibility = passt ? 'visible' : 'hidden';
-    });
+  let textVersion = 1;
+  const textBild = (art) => ['concat', 'txt|' + textVersion + '|' + art + '|', ['get', 'name']];
+  function stil() {
+    const p = pal();
+    return {
+      version: 8,
+      light: { anchor: 'map', position: [1.4, 215, 40], intensity: 0.28 },
+      sources: {
+        ueb: { type: 'geojson', data: uebersicht, tolerance: 0.3 },
+        stt: { type: 'geojson', data: D.stadtteile, tolerance: 0.2 },
+        zonen: { type: 'geojson', data: zonenBauland, tolerance: 0.2 },
+        recht: { type: 'geojson', data: D.bplan_recht, tolerance: 0.2 },
+        verf: { type: 'geojson', data: D.bplan_verfahren, tolerance: 0.1 },
+        auswahl: { type: 'geojson', data: leer },
+        punkt: { type: 'geojson', data: leer },
+        bahn: { type: 'geojson', data: punkte(D.bahn.map((b) => [b.name, b.lon, b.lat])) },
+        orte: { type: 'geojson', data: punkte(IDS.map((id) => [STT[id].properties.name, STT[id].properties.lon, STT[id].properties.lat])) },
+        str: { type: 'geojson', data: punkte(K.strassen) },
+      },
+      layers: [
+        { id: 'grund', type: 'background', paint: { 'background-color': p.grund } },
+        { id: 'ueb', type: 'fill', source: 'ueb', paint: { 'fill-color': nutzFarbe() } },
+        { id: 'stt-flach', type: 'fill', source: 'stt', paint: { 'fill-color': ['get', 'c'], 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0.8, 14, 0.3, 16, 0.1] } },
+        { id: 'zonen-fill', type: 'fill', source: 'zonen', layout: { visibility: 'none' }, paint: { 'fill-color': ['get', 'c'], 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0.85, 15, 0.55, 17, 0.3], 'fill-outline-color': css('--surface') } },
+        { id: 'stt-linie', type: 'line', source: 'stt', paint: { 'line-color': css('--ink-2'), 'line-width': 1.1, 'line-opacity': 0.75 } },
+        { id: 'recht-fill', type: 'fill', source: 'recht', layout: { visibility: 'none' }, paint: { 'fill-color': css('--ink-2'), 'fill-opacity': 0.05 } },
+        { id: 'recht-linie', type: 'line', source: 'recht', layout: { visibility: 'none' }, paint: { 'line-color': css('--ink-2'), 'line-width': 1 } },
+        { id: 'verf-fill', type: 'fill', source: 'verf', paint: { 'fill-color': css('--plan'), 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 11.6, 0, 12.6, 0.14] } },
+        { id: 'verf-linie', type: 'line', source: 'verf', paint: { 'line-color': css('--plan'), 'line-width': 2.4, 'line-dasharray': [2.4, 1.8], 'line-opacity': ['interpolate', ['linear'], ['zoom'], 11.6, 0, 12.6, 1] } },
+        // Übersicht: jeder Stadtteil als Säule, Höhe und Farbe folgen der gewählten Kennzahl.
+        { id: 'stt-prisma', type: 'fill-extrusion', source: 'stt', paint: {
+          'fill-extrusion-color': ['get', 'c'],
+          'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 11.7, ['get', 'h'], 13.1, 0],
+          'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 12.5, 0.95, 13.1, 0],
+        } },
+        { id: 'hervor', type: 'line', source: 'stt', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': css('--ink'), 'line-width': 2.5 } },
+        { id: 'auswahl-rand', type: 'line', source: 'auswahl', paint: { 'line-color': css('--surface'), 'line-width': 6.5 } },
+        { id: 'auswahl-linie', type: 'line', source: 'auswahl', paint: { 'line-color': css('--ink'), 'line-width': 2.5 } },
+        { id: 'punkt', type: 'circle', source: 'punkt', paint: { 'circle-radius': 7, 'circle-color': css('--plan'), 'circle-stroke-color': css('--surface'), 'circle-stroke-width': 2.5, 'circle-pitch-alignment': 'map' } },
+        { id: 'bahn', type: 'circle', source: 'bahn', paint: { 'circle-radius': 5, 'circle-color': css('--ink'), 'circle-stroke-color': css('--surface'), 'circle-stroke-width': 2 } },
+        { id: 'str-namen', type: 'symbol', source: 'str', minzoom: 15.2, layout: { 'icon-image': textBild('str'), 'icon-padding': 6 } },
+        { id: 'bahn-namen', type: 'symbol', source: 'bahn', minzoom: 12.4, layout: { 'icon-image': textBild('bahn'), 'icon-anchor': 'bottom', 'icon-offset': [0, -14], 'icon-padding': 2 } },
+        { id: 'orte', type: 'symbol', source: 'orte', layout: { 'icon-image': textBild('ort'), 'icon-padding': 4 } },
+      ],
+    };
   }
-  map.on('zoomend', zeigeNamen);
-  // Breite Karte: Platz für das Ebenen-Feld links freihalten.
-  const breit = $('map').clientWidth > 720 && $('map').clientHeight >= 520;
-  map.fitBounds(stadtteilLayer.getBounds(), { paddingTopLeft: [breit ? 250 : 10, 10], paddingBottomRight: [10, 10] });
+
+  let map = null, bereit = false, szene = null, tippFenster = null;
+  const nutzKacheln = [];
+  const BESCHRIFTUNG = { ort: ['600 15px "Barlow Condensed", "Barlow", system-ui, sans-serif', 0.4], bahn: ['600 13px "Barlow Condensed", "Barlow", system-ui, sans-serif', 0.3], str: ['500 11.5px "Barlow", system-ui, sans-serif', 0] };
+  // Beschriftungen entstehen als kleine Bilder aus der Seitenschrift – so braucht die Karte keinen Schriftserver.
+  function zeichneText(art, text) {
+    const f = BESCHRIFTUNG[art] || BESCHRIFTUNG.str, s = 2, c = document.createElement('canvas'), x = c.getContext('2d', { willReadFrequently: true });
+    x.font = f[0];
+    if (f[1] && 'letterSpacing' in x) x.letterSpacing = f[1] + 'px';
+    const w = Math.ceil(x.measureText(text).width) + 10, h = 22;
+    c.width = w * s; c.height = h * s;
+    x.scale(s, s); x.font = f[0];
+    if (f[1] && 'letterSpacing' in x) x.letterSpacing = f[1] + 'px';
+    x.textBaseline = 'middle'; x.lineJoin = 'round';
+    x.strokeStyle = css('--halo'); x.lineWidth = 3.5; x.strokeText(text, 5, h / 2 + 0.5);
+    x.fillStyle = art === 'str' ? css('--ink-2') : css('--ink'); x.fillText(text, 5, h / 2 + 0.5);
+    return x.getImageData(0, 0, c.width, c.height);
+  }
+  const kamMeter = (zoom) => ((map.transform.cameraToCenterDistance || 1000) * 40075016.7 * Math.cos((51.96 * Math.PI) / 180)) / (512 * Math.pow(2, zoom));
+  const rand = () => {
+    const breit = $('map').clientWidth > 720 && $('map').clientHeight >= 520;
+    return { top: 20, bottom: 20, right: 30, left: breit ? 250 : 20 };
+  };
+  function ladeKacheln(ziel, zoom) {
+    if (!szene) return;
+    const c = ziel || map.getCenter(), z = zoom == null ? map.getZoom() : zoom;
+    szene.ladeUm([c.lng, c.lat], z, kamMeter(z));
+  }
+  function fliege(bbox, opt) {
+    const ziel = Object.assign({ padding: rand(), pitch: 58, bearing: -18, maxZoom: 15, duration: 2200, essential: false }, opt);
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) ziel.duration = 0;
+    const kam = map.cameraForBounds(bbox, ziel);
+    if (kam) ladeKacheln(kam.center, Math.min(kam.zoom, ziel.maxZoom));
+    map.fitBounds(bbox, ziel);
+  }
+  // Die Stadt soll die Kartenfläche gut füllen: etwas näher heran, als die reine Einpassung ergibt.
+  function ganzeStadt(sofort) {
+    const kam = map.cameraForBounds(GRENZEN, { padding: rand(), pitch: 44, bearing: -12 });
+    const ziel = { center: kam.center, zoom: Math.min(12.4, kam.zoom + 0.25), pitch: 44, bearing: -12, duration: 1800 };
+    if (sofort || window.matchMedia('(prefers-reduced-motion: reduce)').matches) map.jumpTo(ziel); else map.flyTo(ziel);
+  }
+  // Flug in den Ortskern eines Stadtteils, nah genug, dass die Gebäude stehen.
+  function fliegeZuKern(id) {
+    const p = STT[id].properties, ziel = { center: [p.klon, p.klat], zoom: 15.3, pitch: 60, bearing: -18, padding: rand(), duration: 2600 };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) ziel.duration = 0;
+    ladeKacheln({ lng: p.klon, lat: p.klat }, ziel.zoom);
+    map.flyTo(ziel);
+  }
+
+  try {
+    map = new maplibregl.Map({
+      container: 'map', style: stil(), bounds: GRENZEN, fitBoundsOptions: { padding: rand(), pitch: 44, bearing: -12 },
+      minZoom: 9.5, maxZoom: 19, maxPitch: 72, antialias: true, attributionControl: false,
+      maxBounds: [[GRENZEN[0][0] - 0.5, GRENZEN[0][1] - 0.3], [GRENZEN[1][0] + 0.5, GRENZEN[1][1] + 0.3]],
+    });
+  } catch (fehler) {
+    $('map').innerHTML = '<p class="kein-webgl">Die 3D-Karte braucht WebGL. Ranking und Steckbriefe funktionieren weiter.</p>';
+  }
+  if (map) {
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+    map.addControl({
+      onAdd: () => {
+        const el = document.createElement('div');
+        el.className = 'maplibregl-ctrl ansicht';
+        el.setAttribute('role', 'group');
+        el.setAttribute('aria-label', 'Kartenansicht');
+        el.innerHTML = '<button type="button" class="knopf" id="ganz">Ganze Stadt</button><button type="button" class="knopf" id="neigung">Draufsicht</button>';
+        return el;
+      },
+      onRemove: () => {},
+    }, 'bottom-right');
+    map.addControl(new maplibregl.AttributionControl({ compact: false, customAttribution: 'Geobasis NRW (dl-de/zero-2-0) · Stadt Münster, Gutachterausschuss, Stadtwerke Münster (dl-de/by-2-0)' }));
+    map.on('styleimagemissing', (e) => {
+      const t = e.id.split('|');
+      if (t[0] === 'txt' && !map.hasImage(e.id)) map.addImage(e.id, zeichneText(t[2], t.slice(3).join('|')), { pixelRatio: 2 });
+    });
+    szene = window.Scout3D.erzeuge(map, {
+      palette: () => {
+        const p = pal();
+        return p;
+      },
+      flaechenDa: (key, daten) => {
+        const los = () => {
+          if (map.getSource('n' + key)) return;
+          map.addSource('n' + key, { type: 'geojson', data: daten, tolerance: 0.15, maxzoom: 17 });
+          map.addLayer({ id: 'n' + key, type: 'fill', source: 'n' + key, minzoom: 12.4, paint: { 'fill-color': nutzFarbe() } }, 'stt-flach');
+          nutzKacheln.push('n' + key);
+        };
+        if (bereit) los(); else map.once('load', los);
+      },
+    });
+    map.on('load', () => {
+      bereit = true;
+      ganzeStadt(true);
+      map.addLayer(szene.ebene, 'punkt');
+      himmel();
+      zeichneFlaechen();
+      zeichneAuswahl();
+      ladeKacheln();
+    });
+    let takt = 0;
+    map.on('move', () => { const t = Date.now(); if (t - takt > 350) { takt = t; ladeKacheln(); } });
+    map.on('moveend', () => ladeKacheln());
+
+    tippFenster = new maplibregl.Popup({ closeButton: false, closeOnClick: false, className: 'tipp', offset: 14, maxWidth: '260px' });
+    const TIPP_EBENEN = ['bahn', 'verf-fill', 'recht-fill', 'zonen-fill', 'stt-prisma', 'stt-flach'];
+    map.on('mousemove', (e) => {
+      if (!bereit) return;
+      const f = map.queryRenderedFeatures(e.point, { layers: TIPP_EBENEN })
+        .sort((a, b) => TIPP_EBENEN.indexOf(a.layer.id) - TIPP_EBENEN.indexOf(b.layer.id))[0];
+      map.getCanvas().style.cursor = f ? 'pointer' : '';
+      if (!f) { tippFenster.remove(); markiereZeile(null); return; }
+      const p = f.properties;
+      let html = '';
+      if (f.layer.id === 'bahn') html = `<b>${esc(p.name)}</b><br><span>Bahnhof / Haltepunkt</span>`;
+      else if (f.layer.id === 'verf-fill') html = `<b>B-Plan ${esc(p.plannr)} · im Verfahren</b><br><span>${esc(p.name)} · ${zahl(+p.ha, 1)} ha</span>`;
+      else if (f.layer.id === 'recht-fill') html = `<b>B-Plan ${esc(p.plannr)}</b>${p.jahr ? ' · seit ' + p.jahr : ''}<br><span>${esc(p.name)}</span>`;
+      else if (f.layer.id === 'zonen-fill') html = `<b>${esc(p.nuta_text)}</b><br><span>${zahl(+p.brw, 0)} €/m² · Zone ${esc(p.nr)}, ${esc(p.ort)}</span>`;
+      else { html = tippStadtteil(p.id); markiereZeile(p.id); }
+      tippFenster.setLngLat(e.lngLat).setHTML(html).addTo(map);
+    });
+    map.getCanvas().addEventListener('mouseleave', () => { tippFenster.remove(); markiereZeile(null); });
+
+    map.on('click', (e) => {
+      // In der Übersicht zählt die angeklickte Säule; hineingezoomt der genaue Punkt am Boden.
+      const saeule = map.getZoom() < 13.1 && state.farbe !== 'zonen' ? map.queryRenderedFeatures(e.point, { layers: ['stt-prisma'] })[0] : null;
+      if (saeule) waehle(saeule.properties.id, null);
+      else {
+        const s = treffer(D.stadtteile, e.lngLat.lng, e.lngLat.lat)[0];
+        if (!s) return;
+        waehle(s.properties.id, { lat: e.lngLat.lat, lng: e.lngLat.lng });
+      }
+      const z = $('rolle').querySelector('.zeile[aria-current="true"]');
+      if (z && !window.matchMedia('(max-width: 760px)').matches) z.scrollIntoView({ block: 'nearest' });
+    });
+    $('ganz').addEventListener('click', () => ganzeStadt(false));
+    $('neigung').addEventListener('click', () => {
+      const flach = map.getPitch() > 5;
+      map.easeTo({ pitch: flach ? 0 : 58, bearing: flach ? 0 : -18, duration: 900 });
+    });
+    map.on('pitchend', () => { $('neigung').textContent = map.getPitch() > 5 ? 'Draufsicht' : '3D-Ansicht'; });
+  }
+
+  function himmel() {
+    const p = pal();
+    try { map.setSky({ 'sky-color': p.himmel, 'horizon-color': p.horizont, 'fog-color': p.horizont, 'sky-horizon-blend': 0.7, 'horizon-fog-blend': 0.7, 'fog-ground-blend': 0.45 }); } catch (e) { /* ältere Kartenversion ohne Himmel */ }
+  }
+  function zeichneAuswahl() {
+    if (!bereit) return;
+    map.getSource('auswahl').setData(state.auswahl ? STT[state.auswahl] : leer);
+    map.getSource('punkt').setData(state.punkt ? { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [state.punkt.lng, state.punkt.lat] } } : leer);
+  }
 
   /* ---------------------------------------------------------- Einfärbung */
-  let klassen = null; // { grenzen: [..], werteVon(feature) }
   function quantile(vals, n) {
     const s = vals.filter((v) => v != null).sort((a, b) => a - b);
     const g = [];
@@ -192,31 +359,52 @@
 
   function zeichneFlaechen() {
     const zonenModus = state.farbe === 'zonen';
-    const linie = css('--ink-2'), deck = kachelnDa ? 0.72 : 0.94;
     if (zonenModus) {
-      if (!map.hasLayer(zonenLayer)) zonenLayer.addTo(map);
-      const q = quantile(zonenBauland.features.map((f) => f.properties.brw), 5);
-      const n = q.grenzen.length + 1;
-      zonenLayer.setStyle((f) => ({ fillColor: farbeFuer(klasse(f.properties.brw, q.grenzen), n), fillOpacity: deck, color: css('--surface'), weight: 0.7 }));
-      stadtteilLayer.setStyle({ fillOpacity: 0, color: linie, weight: 1.2 });
+      const q = quantile(zonenBauland.features.map((f) => f.properties.brw), 5), n = q.grenzen.length + 1;
+      zonenBauland.features.forEach((f) => { f.properties.c = farbeFuer(klasse(f.properties.brw, q.grenzen), n); });
       legende('Bodenrichtwert ' + STAND.brw, '€/m²', 0, q, 'Baureifes Land für Wohnen, Mischnutzung und Gewerbe. Außenbereich und Sonderflächen sind nicht eingefärbt.');
     } else {
-      if (map.hasLayer(zonenLayer)) map.removeLayer(zonenLayer);
       const key = state.farbe;
       const von = (id) => (key === 'score' ? score[id] : D.werte[id][key]);
-      const q = quantile(IDS.map(von), 5);
-      const n = q.grenzen.length + 1;
-      stadtteilLayer.setStyle((f) => {
-        const v = von(f.properties.id);
-        return { fillColor: v == null ? css('--nodata') : farbeFuer(klasse(v, q.grenzen), n), fillOpacity: deck, color: css('--surface'), weight: 1.2 };
+      const q = quantile(IDS.map(von), 5), n = q.grenzen.length + 1;
+      IDS.forEach((id) => {
+        const v = von(id), p = STT[id].properties;
+        p.c = v == null ? css('--nodata') : farbeFuer(klasse(v, q.grenzen), n);
+        p.h = v == null ? 40 : 90 + (1500 * (v - q.min)) / ((q.max - q.min) || 1);
       });
-      if (key === 'score') legende('Score ' + state.profil.label, 'Punkte', 0, q, 'Die oberste Stufe steht für die am besten geeigneten Stadtteile. 100 Punkte hieße: in jedem Kriterium der beste.');
+      if (key === 'score') legende('Score ' + state.profil.label, 'Punkte', 0, q, 'In der Übersicht steht jeder Stadtteil als Säule: je höher, desto besser geeignet. 100 Punkte hieße: in jedem Kriterium der beste.');
       else legende(IND[key].label, IND[key].unit, IND[key].digits, q, IND[key].desc, IDS.some((id) => von(id) == null));
     }
-    verfahrenLayer.setStyle({ color: css('--plan'), weight: 2.2, dashArray: '6 5', fillColor: css('--plan'), fillOpacity: 0.12 });
-    rechtLayer.setStyle({ color: css('--ink-2'), weight: 1, fillOpacity: 0.04, fillColor: css('--ink-2') });
-    auswahlRand.setStyle({ color: css('--surface'), weight: 6.5, fill: false });
-    auswahlLayer.setStyle({ color: css('--ink'), weight: 2.5, fill: false });
+    if (!bereit) return;
+    const p = pal(), sichtbar = (id, an) => map.setLayoutProperty(id, 'visibility', an ? 'visible' : 'none');
+    if (zonenModus) map.getSource('zonen').setData(zonenBauland); else map.getSource('stt').setData(D.stadtteile);
+    sichtbar('zonen-fill', zonenModus); sichtbar('stt-prisma', !zonenModus); sichtbar('stt-flach', !zonenModus);
+    sichtbar('verf-fill', $('l-verfahren').checked); sichtbar('verf-linie', $('l-verfahren').checked);
+    sichtbar('recht-fill', $('l-recht').checked); sichtbar('recht-linie', $('l-recht').checked);
+    sichtbar('bahn', $('l-bahn').checked); sichtbar('bahn-namen', $('l-bahn').checked);
+    // Farben aus dem aktuellen Theme
+    map.setPaintProperty('grund', 'background-color', p.grund);
+    ['ueb'].concat(nutzKacheln).forEach((id) => map.setPaintProperty(id, 'fill-color', nutzFarbe()));
+    map.setPaintProperty('zonen-fill', 'fill-outline-color', css('--surface'));
+    map.setPaintProperty('stt-linie', 'line-color', css('--ink-2'));
+    ['recht-fill', 'verf-fill'].forEach((id) => map.setPaintProperty(id, 'fill-color', css(id === 'recht-fill' ? '--ink-2' : '--plan')));
+    map.setPaintProperty('recht-linie', 'line-color', css('--ink-2'));
+    map.setPaintProperty('verf-linie', 'line-color', css('--plan'));
+    map.setPaintProperty('hervor', 'line-color', css('--ink'));
+    map.setPaintProperty('auswahl-rand', 'line-color', css('--surface'));
+    map.setPaintProperty('auswahl-linie', 'line-color', css('--ink'));
+    map.setPaintProperty('punkt', 'circle-color', css('--plan'));
+    map.setPaintProperty('punkt', 'circle-stroke-color', css('--surface'));
+    map.setPaintProperty('bahn', 'circle-color', css('--ink'));
+    map.setPaintProperty('bahn', 'circle-stroke-color', css('--surface'));
+  }
+  function themaGewechselt() {
+    if (!bereit) return;
+    textVersion++;
+    ['str', 'bahn', 'ort'].forEach((art) => map.setLayoutProperty(art === 'ort' ? 'orte' : art + '-namen', 'icon-image', textBild(art)));
+    himmel();
+    zeichneFlaechen();
+    szene.neuFaerben();
   }
   function legende(titel, einheit, d, q, fuss, ohneAngabe) {
     const n = q.grenzen.length + 1, zeilen = [];
@@ -264,22 +452,27 @@
         </button></li>`).join('') + '</ol>';
     }
   }
-  function markiereZeile(id, an) {
-    const el = $('rolle').querySelector(`.zeile[data-id="${id}"]`);
-    if (el) el.classList.toggle('hover', an);
+  let markiert = null;
+  function markiereZeile(id) {
+    if (markiert === id) return;
+    const alt = markiert && $('rolle').querySelector(`.zeile[data-id="${markiert}"]`);
+    if (alt) alt.classList.remove('hover');
+    markiert = id;
+    const neu = id && $('rolle').querySelector(`.zeile[data-id="${id}"]`);
+    if (neu) neu.classList.add('hover');
   }
   $('rolle').addEventListener('click', (e) => {
     const z = e.target.closest('.zeile');
     if (!z) return;
     if (z.dataset.id) {
       waehle(z.dataset.id, null);
-      map.flyToBounds(L.geoJSON(STT[z.dataset.id]).getBounds(), { padding: [60, 60], maxZoom: 14, duration: 0.6 });
+      if (map) fliegeZuKern(z.dataset.id);
     } else {
       const f = D.bplan_verfahren.features.find((x) => x.properties.plannr === z.dataset.plan);
       $('l-verfahren').checked = true; schalteEbenen();
-      const b = L.geoJSON(f).getBounds(), c = b.getCenter();
-      map.flyToBounds(b, { padding: [80, 80], maxZoom: 16, duration: 0.6 });
-      waehle(f.properties.stt, { lat: c.lat, lng: c.lng });
+      const r = f.bbox;
+      if (map) fliege([[r[0], r[1]], [r[2], r[3]]], { maxZoom: 16.4, pitch: 60 });
+      waehle(f.properties.stt, { lat: (r[1] + r[3]) / 2, lng: (r[0] + r[2]) / 2 });
     }
     if (window.matchMedia('(max-width: 760px)').matches) document.querySelector('.karte').scrollIntoView({ behavior: 'smooth' });
   });
@@ -289,7 +482,7 @@
   function hebeHervor(id) {
     if (hervor === id) return;
     hervor = id;
-    stadtteilLayer.eachLayer((l) => l.setStyle({ weight: l.feature.properties.id === id ? 3 : 1.2, color: l.feature.properties.id === id ? css('--ink') : (state.farbe === 'zonen' ? css('--ink-2') : css('--surface')) }));
+    if (bereit) map.setFilter('hervor', ['==', ['get', 'id'], id || '']);
   }
   ['stadtteile', 'plaene'].forEach((r) => $('tab-' + r).addEventListener('click', () => { state.reiter = r; zeichneListe(); }));
 
@@ -349,10 +542,12 @@
   }
 
   /* ---------------------------------------------------------- Steckbrief */
+  // Reihenfolge im Standort-Check: baureifes Land, dann bebauter Außenbereich, dann Acker, Grünland, Forst
+  const stufe = (z) => (z.gruppe !== 'sonst' ? 0 : z.asb ? 1 : 2);
   function standortCheck(pt) {
     const x = pt.lng, y = pt.lat;
     const zonen = treffer(D.zonen, x, y).map((f) => f.properties)
-      .sort((a, b) => (a.gruppe === 'sonst') - (b.gruppe === 'sonst') || (a.asb ? 1 : 0) - (b.asb ? 1 : 0) || b.brw - a.brw);
+      .sort((a, b) => stufe(a) - stufe(b) || b.brw - a.brw);
     const recht = treffer(D.bplan_recht, x, y).map((f) => f.properties).sort((a, b) => (b.jahr || 0) - (a.jahr || 0));
     const verf = treffer(D.bplan_verfahren, x, y).map((f) => f.properties);
     const bahn = D.bahn.map((b) => ({ name: b.name, m: meter(y, x, b.lat, b.lon) })).sort((a, b) => a.m - b.m)[0];
@@ -376,7 +571,7 @@
   function zeichneSteckbrief() {
     const el = $('steckbrief'), id = state.auswahl;
     if (!id) {
-      el.innerHTML = '<div class="abschnitt"><h3>Kein Stadtteil gewählt</h3><p class="lead">Wählen Sie einen Stadtteil in der Liste oder klicken Sie in die Karte. Ein Klick zeigt auch Bodenrichtwert und Baurecht genau an dieser Stelle.</p></div>';
+      el.innerHTML = '<div class="abschnitt"><h3>Kein Stadtteil gewählt</h3><p class="lead">Wählen Sie einen Stadtteil in der Liste oder klicken Sie in die Karte. Hineingezoomt zeigt ein Klick auch Bodenrichtwert und Baurecht genau an dieser Stelle.</p></div>';
       return;
     }
     const p = STT[id].properties, v = D.werte[id], r = D.reihen[id], g = state.gewichte;
@@ -434,22 +629,10 @@
   function waehle(id, punkt) {
     state.auswahl = id;
     state.punkt = punkt;
-    auswahlRand.clearLayers();
-    auswahlLayer.clearLayers();
-    if (id) { auswahlRand.addData(STT[id]); auswahlLayer.addData(STT[id]); }
-    if (punktMarker) { map.removeLayer(punktMarker); punktMarker = null; }
-    if (punkt) punktMarker = L.circleMarker(punkt, { radius: 7, color: css('--surface'), weight: 2, fillColor: css('--plan'), fillOpacity: 1, interactive: false }).addTo(map);
-    zeichneFlaechen();
+    zeichneAuswahl();
     $('rolle').querySelectorAll('.zeile[data-id]').forEach((z) => z.setAttribute('aria-current', z.dataset.id === id));
     zeichneSteckbrief();
   }
-  map.on('click', (e) => {
-    const s = treffer(D.stadtteile, e.latlng.lng, e.latlng.lat)[0];
-    if (!s) return;
-    waehle(s.properties.id, { lat: e.latlng.lat, lng: e.latlng.lng });
-    const z = $('rolle').querySelector('.zeile[aria-current="true"]');
-    if (z && !window.matchMedia('(max-width: 760px)').matches) z.scrollIntoView({ block: 'nearest' });
-  });
 
   /* ---------------------------------------------------------- Bedienung */
   function zeichneProfile() {
@@ -481,13 +664,7 @@
     + '<optgroup label="Kennzahl je Stadtteil">' + D.indikatoren.map((i) => `<option value="${i.key}">${esc(i.label)}</option>`).join('') + '</optgroup>'
     + '<optgroup label="Detailkarte"><option value="zonen">Bodenrichtwertzonen ' + STAND.brw + '</option></optgroup>';
   $('farbe').addEventListener('change', (e) => { state.farbe = e.target.value; zeichneFlaechen(); });
-  function schalteEbenen() {
-    [['l-verfahren', verfahrenLayer], ['l-recht', rechtLayer], ['l-bahn', bahnLayer]].forEach(([id, layer]) => {
-      if ($(id).checked && !map.hasLayer(layer)) layer.addTo(map);
-      if (!$(id).checked && map.hasLayer(layer)) map.removeLayer(layer);
-    });
-    zeichneFlaechen();
-  }
+  const schalteEbenen = () => zeichneFlaechen();
   ['l-verfahren', 'l-recht', 'l-bahn'].forEach((id) => $(id).addEventListener('change', schalteEbenen));
   if ($('map').clientHeight < 520 || window.matchMedia('(max-width: 760px)').matches) $('ebenen').open = false;
 
@@ -496,10 +673,11 @@
     $('methodik-inhalt').innerHTML = `
       <p><b>Bewertung.</b> Jede Kennzahl wird in einen Prozentrang von 0 bis 100 unter den 45 Stadtteilen umgerechnet (100 = bester Stadtteil, je nach Kennzahl der höchste oder der niedrigste Wert). Der Score ist der gewichtete Mittelwert dieser Ränge. Fehlt ein Wert, zählt das Kriterium für diesen Stadtteil nicht mit.</p>
       <p><b>Bodenrichtwerte.</b> Auf dem Bauland liegt ein Raster aus 50-m-Messpunkten. An jedem Punkt wird der Richtwert der Jahre ${D.meta.brw_jahre[0]} bis ${STAND.brw} abgelesen. Die Preisentwicklung vergleicht nur Punkte, die in beiden Jahren einen Wert haben. Außenbereichszonen bleiben außen vor. 2022 wurden die Zonen neu zugeschnitten, ein Teil des Sprungs in diesem Jahr kann darauf zurückgehen.</p>
+      <p><b>3D-Karte.</b> Gebäude und Dachformen stammen aus dem amtlichen 3D-Gebäudemodell (LoD2) von Geobasis NRW, Straßen, Gewässer und Grünflächen aus dem Liegenschaftskataster der Stadt, Bäume aus dem städtischen Baumkataster. Dach- und Fassadenfarben sowie die Baumgröße sind Darstellung, keine Messwerte.</p>
       <p><b>Erreichbarkeit.</b> Mittlere Luftlinie von denselben Messpunkten zur nächsten Kita, Grundschule, Bushaltestelle und zum nächsten Bahnhof. Luftlinie ist kürzer als der tatsächliche Weg.</p>
       <p><b>Grenzen.</b> Ein Bodenrichtwert ist ein Durchschnittswert für eine Zone und kein Kaufpreis für ein einzelnes Grundstück. Bebauungspläne im Verfahren sind nicht alle Neubaugebiete, manche überplanen den Bestand. Mieten, Kaufpreise und Autobahnanschlüsse fehlen noch. Der Score ersetzt keine Ankaufsprüfung.</p>
       <p><b>Quellen</b> (Datenlizenz Deutschland – Namensnennung 2.0, abgerufen ${D.meta.erstellt.split('-').reverse().join('.')}):</p>
-      <ul>${quellen.map((q) => `<li>${esc(q)}</li>`).join('')}<li>Stadtteilgrenzen (statistische Bezirke), Stadt Münster</li></ul>
+      <ul>${quellen.map((q) => `<li>${esc(q)}</li>`).join('')}<li>Stadtteilgrenzen (statistische Bezirke), Stadt Münster</li><li>Tatsächliche Nutzung, Baumkataster, Straßenverzeichnis, Stadt Münster</li><li>3D-Gebäudemodell LoD2, Geobasis NRW (Datenlizenz Deutschland – Zero 2.0)</li></ul>
       <p>Alle Daten stammen aus dem <a href="https://opendata.stadt-muenster.de" target="_blank" rel="noopener">Open-Data-Portal der Stadt Münster</a>.</p>`;
   }
 
@@ -511,9 +689,9 @@
   }
 
   // Farben folgen dem Theme: bei Wechsel neu einfärben.
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', zeichneFlaechen);
-  new MutationObserver(zeichneFlaechen).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  new ResizeObserver(() => { map.invalidateSize(); zeigeNamen(); }).observe($('map'));
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themaGewechselt);
+  new MutationObserver(themaGewechselt).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (map) new ResizeObserver(() => map.resize()).observe($('map'));
 
   /* ---------------------------------------------------------- Start */
   zeichneProfile();
@@ -522,6 +700,6 @@
   rechne();
   zeichneListe();
   waehle(reihenfolge[0], null);
-  zeigeNamen();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(zeigeNamen);
+  // Beschriftungen neu zeichnen, sobald die Schrift geladen ist.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (bereit) themaGewechselt(); else if (map) map.once('load', themaGewechselt); });
 })();

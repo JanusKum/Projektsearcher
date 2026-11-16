@@ -6,7 +6,7 @@
 <title>Standort-Scout Münster</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap">
-<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="vendor/maplibre-gl.css">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
@@ -17,7 +17,7 @@
       <div class="marke-zeichen" aria-hidden="true"></div>
       <div>
         <h1>Standort-Scout Münster</h1>
-        <p>Wo lohnt sich das nächste Projekt? 45 Stadtteile, bewertet mit offenen Daten der Stadt.</p>
+        <p>Wo lohnt sich das nächste Projekt? 45 Stadtteile, bewertet mit offenen Daten, auf einer 3D-Karte der ganzen Stadt.</p>
       </div>
     </div>
     <div class="profil">
@@ -50,7 +50,7 @@
   </aside>
 
   <main class="karte">
-    <div id="map" role="application" aria-label="Karte der Stadtteile von Münster"></div>
+    <div id="map" role="application" aria-label="3D-Karte von Münster"></div>
     <details class="ebenen" id="ebenen" open>
       <summary>Kartenebenen</summary>
       <div class="ebenen-inhalt">
@@ -67,8 +67,11 @@
   <section class="steckbrief" id="steckbrief" aria-live="polite" aria-label="Steckbrief"></section>
 </div>
 <!-- app:end -->
-<script src="vendor/leaflet.js"></script>
+<script src="vendor/maplibre-gl.js"></script>
+<script src="vendor/earcut.min.js"></script>
 <script src="data.js"></script>
+<script src="geo/index.js"></script>
+<script src="map3d.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

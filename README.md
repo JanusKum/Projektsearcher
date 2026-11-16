@@ -6,11 +6,15 @@ keine vertraulichen Firmendaten.
 
 ## Was das Tool zeigt
 
-- **Karte mit Ranking** der Stadtteile für vier Projektarten: Reihenhäuser,
-  Mehrfamilienhäuser, Quartiere, Gewerbe & Büro.
+- **3D-Karte der ganzen Stadt**: rund 139.000 Gebäude mit echten Dachformen aus dem
+  amtlichen 3D-Gebäudemodell, dazu Straßen, Gewässer, Grünflächen, Bäume und
+  Straßennamen. In der Übersicht steht jeder Stadtteil als Säule, deren Höhe dem Score
+  folgt. Beim Hineinzoomen sinken die Säulen ab und die Gebäude wachsen heraus.
+- **Ranking** der Stadtteile für vier Projektarten: Reihenhäuser,
+  Mehrfamilienhäuser, Quartiere, Gewerbe & Büro. Ein Klick fliegt in den Ortskern.
 - **Steckbrief je Stadtteil**: Bodenrichtwert und Preisentwicklung 2016–2026, Einwohner
   mit Prognose bis 2035, und eine Aufschlüsselung, wie der Score zustande kommt.
-- **Standort-Check**: Ein Klick auf eine beliebige Stelle der Karte zeigt den
+- **Standort-Check**: Hineingezoomt zeigt ein Klick auf eine beliebige Stelle den
   Bodenrichtwert der Zone, den Bebauungsplan (mit Link zu den Planunterlagen der Stadt)
   und die Entfernung zum nächsten Bahnhof.
 - **Flächen in Planung**: alle Bebauungspläne im Aufstellungsverfahren, sortiert nach
@@ -19,11 +23,11 @@ keine vertraulichen Firmendaten.
 
 ## Öffnen
 
-`docs/index.html` im Browser öffnen, ein Doppelklick genügt. Es ist kein Server nötig.
-Mit Internetverbindung liegt eine OpenStreetMap-Karte unter den Flächen, ohne Verbindung
-funktioniert alles andere weiter.
+`docs/index.html` im Browser öffnen, ein Doppelklick genügt. Es ist kein Server und
+keine Internetverbindung nötig, alle Kartendaten liegen im Ordner `docs/geo/`. Die Karte
+braucht einen Browser mit WebGL.
 
-Eine einzelne Datei zum Weitergeben per E-Mail erzeugt:
+Eine einzelne Datei zum Weitergeben (rund 27 MB) erzeugt:
 
 ```bash
 python pipeline/build_single_file.py        # schreibt dist/standort-scout-muenster.html
@@ -33,7 +37,8 @@ python pipeline/build_single_file.py        # schreibt dist/standort-scout-muens
 
 ```bash
 pip install -r pipeline/requirements.txt
-python pipeline/build_data.py               # lädt die Rohdaten und schreibt docs/data.js
+python pipeline/build_data.py               # Kennzahlen: lädt die Rohdaten, schreibt docs/data.js
+python pipeline/build_map3d.py              # 3D-Karte: lädt rund 3 GB, schreibt docs/geo/
 ```
 
 Die Rohdaten landen in `pipeline/raw/` (nicht im Repository). Erscheinen neue
@@ -55,9 +60,12 @@ sich in der Oberfläche ändern lässt.
 | Haushalte mit Kindern, Einpersonenhaushalte, Arbeitslosenanteil, Wohnungsneubau | Statistik der Stadt Münster |
 | Bebauungspläne (rechtskräftig und im Verfahren) | Geoportal der Stadt Münster |
 | Wege zu Kita, Grundschule, Bushaltestelle, Bahnhof, Hauptbahnhof | Stadt Münster, Stadtwerke Münster |
+| 3D-Karte: Gebäude und Dachformen (LoD2) | Geobasis NRW |
+| 3D-Karte: Straßen, Gewässer, Grün (tatsächliche Nutzung), Bäume, Straßennamen | Liegenschaftskataster und Baumkataster der Stadt Münster |
 
-Alle Datensätze stammen aus dem [Open-Data-Portal der Stadt Münster](https://opendata.stadt-muenster.de)
-und stehen unter der Datenlizenz Deutschland – Namensnennung 2.0.
+Die Datensätze der Stadt stammen aus dem [Open-Data-Portal der Stadt Münster](https://opendata.stadt-muenster.de)
+und stehen unter der Datenlizenz Deutschland – Namensnennung 2.0. Das 3D-Gebäudemodell
+stellt [Geobasis NRW](https://www.opengeodata.nrw.de) unter der Datenlizenz Deutschland – Zero 2.0 bereit.
 
 **Bodenrichtwerte.** Auf dem heutigen Bauland liegt ein Raster aus 50-m-Messpunkten. An
 jedem Punkt wird für jedes Jahr der Richtwert der dort geltenden Zone abgelesen. Die
@@ -67,6 +75,12 @@ außen vor.
 
 **Erreichbarkeit.** Mittlere Luftlinie von denselben Messpunkten zum nächsten Ziel.
 
+**3D-Karte.** `build_map3d.py` liest aus dem LoD2-Modell die Dachflächen jedes Gebäudes
+und packt sie in Kacheln von 2 × 2 km. Die App zieht daraus die Wände bis zum Boden,
+berechnet die Beleuchtung und zeichnet alles als eigene WebGL-Ebene in MapLibre. Lage und
+Höhe der Gebäude sind amtlich. Dach- und Fassadenfarben sowie die Größe der Bäume sind
+Darstellung.
+
 ## Grenzen
 
 - Ein Bodenrichtwert ist ein Durchschnitt für eine Zone und kein Kaufpreis für ein
@@ -75,6 +89,8 @@ außen vor.
   Jahr kann darauf zurückgehen.
 - Bebauungspläne im Verfahren sind nicht alle Neubaugebiete, manche überplanen den Bestand.
 - Luftlinie ist kürzer als der tatsächliche Weg.
+- Das Baumkataster enthält nur knapp die Hälfte der städtischen Bäume und keine privaten.
+- Die 3D-Karte hat kein Geländemodell. Münster ist flach, alle Gebäude stehen auf einer Ebene.
 - Mieten, Kaufpreise, Autobahnanschlüsse und Nahversorgung fehlen noch.
 - Der Score ist eine Vorauswahl und ersetzt keine Ankaufsprüfung.
 
@@ -88,7 +104,9 @@ außen vor.
 ## Aufbau
 
 ```
-docs/                 Web-App (index.html, app.js, app.css, data.js, Leaflet)
+docs/                 Web-App (index.html, app.js, map3d.js, app.css, data.js, MapLibre)
+docs/geo/             3D-Karte: Übersicht (index.js) und 108 Kacheln mit Gebäuden, Flächen, Bäumen
 pipeline/build_data.py         Rohdaten laden und zu Kennzahlen verdichten
+pipeline/build_map3d.py        3D-Gebäudemodell und Kataster zu Kartenkacheln verarbeiten
 pipeline/build_single_file.py  App in eine einzelne HTML-Datei packen
 ```

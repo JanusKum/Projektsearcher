@@ -199,7 +199,7 @@ def to_geojson(g: gpd.GeoDataFrame, props: list[str], tol: float) -> dict:
             if isinstance(v, (np.integer,)):
                 v = int(v)
             elif isinstance(v, (np.floating, float)):
-                v = round(float(v), 5 if k in ("lat", "lon") else 2)
+                v = round(float(v), 5 if k in ("lat", "lon", "klat", "klon") else 2)
             p[k] = v
         feats.append({"type": "Feature", "properties": p, "geometry": shapely.geometry.mapping(row.geometry)})
     return {"type": "FeatureCollection", "features": feats}
@@ -419,6 +419,13 @@ def build() -> dict:
         for key, t in trees.items():
             base = dist["wohn"] if key in ("d_kita", "d_grund", "d_weiter") else dist["alle"]
             val.loc[row["id"], key] = float(np.mean(t.query(base)[0]))
+    # Ortskern: Messpunkt auf Wohn- oder Mischbaufläche, der dem Median aller Punkte am nächsten liegt.
+    # Dorthin fliegt die 3D-Karte, wenn ein Stadtteil gewählt wird.
+    kerne = {}
+    for _, row in stt.iterrows():
+        xy = xy_of(("wohnen", "misch"), row["id"], row.geometry)
+        med = np.median(xy, axis=0)
+        kerne[row["id"]] = xy[np.argmin(((xy - med) ** 2).sum(axis=1))]
     val["d_familie"] = (val["d_kita"] + val["d_grund"]) / 2
     val["d_zentrum"] = val["d_zentrum"] / 1000  # km zum Hauptbahnhof
 
@@ -481,7 +488,10 @@ def build() -> dict:
     anker = gpd.GeoSeries([label_point(g) for g in stt.geometry], crs=UTM).to_crs(4326)
     stt_simple["lat"] = [round(p.y, 5) for p in anker]
     stt_simple["lon"] = [round(p.x, 5) for p in anker]
-    stt_simple["geometry"] = shapely.coverage_simplify(stt_simple.geometry.values, 12)
+    kern = gpd.GeoSeries([Point(kerne[i]) for i in stt["id"]], crs=UTM).to_crs(4326)
+    stt_simple["klat"] = [round(p.y, 5) for p in kern]
+    stt_simple["klon"] = [round(p.x, 5) for p in kern]
+    stt_simple["geometry"] = shapely.coverage_simplify(stt_simple.geometry.values, 3)
     zones_now = zones_now.copy()
     zones_now["nuta_text"] = zones_now["NUTA"].map(NUTA_TEXT).fillna(zones_now["NUTA"])
     zones_now["gfz"] = pd.to_numeric(zones_now.get("GFZ"), errors="coerce")
@@ -503,10 +513,10 @@ def build() -> dict:
         "werte": values,
         "raenge": score_out,
         "reihen": series,
-        "stadtteile": to_geojson(stt_simple, ["id", "name", "bezirk", "lat", "lon"], 0),
-        "zonen": to_geojson(zones_now, ["nr", "brw", "nuta", "nuta_text", "gruppe", "entw", "asb", "gez", "gfz", "ort", "bem"], 4),
-        "bplan_verfahren": to_geojson(bv, ["plannr", "name", "url", "ha", "stt", "stt_name"], 3),
-        "bplan_recht": to_geojson(br, ["plannr", "name", "jahr", "url"], 5),
+        "stadtteile": to_geojson(stt_simple, ["id", "name", "bezirk", "lat", "lon", "klat", "klon"], 0),
+        "zonen": to_geojson(zones_now, ["nr", "brw", "nuta", "nuta_text", "gruppe", "entw", "asb", "gez", "gfz", "ort", "bem"], 1.5),
+        "bplan_verfahren": to_geojson(bv, ["plannr", "name", "url", "ha", "stt", "stt_name"], 1),
+        "bplan_recht": to_geojson(br, ["plannr", "name", "jahr", "url"], 2),
         "bahn": [{"name": r["name"], "lat": round(r.geometry.y, 5), "lon": round(r.geometry.x, 5)} for _, r in bahn_ll.iterrows()],
     }
 
