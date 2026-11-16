@@ -1,0 +1,4 @@
+pipeline/raw/
+dist/
+__pycache__/
+.DS_Store

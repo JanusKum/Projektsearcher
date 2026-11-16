@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Standort-Scout Münster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<!-- app:start -->
+<div class="app" id="app">
+  <header class="kopf">
+    <div class="marke">
+      <div class="marke-zeichen" aria-hidden="true"></div>
+      <div>
+        <h1>Standort-Scout Münster</h1>
+        <p>Wo lohnt sich das nächste Projekt? 45 Stadtteile, bewertet mit offenen Daten der Stadt.</p>
+      </div>
+    </div>
+    <div class="profil">
+      <span class="etikett" id="profil-etikett">Bewertung für</span>
+      <div class="segmente" id="profile" role="group" aria-labelledby="profil-etikett"></div>
+    </div>
+  </header>
+
+  <aside class="liste" aria-label="Ranking">
+    <div class="liste-kopf">
+      <p class="frage" id="frage"></p>
+      <div class="reiter" role="tablist">
+        <button type="button" role="tab" id="tab-stadtteile" aria-selected="true" aria-controls="rolle">Stadtteile</button>
+        <button type="button" role="tab" id="tab-plaene" aria-selected="false" aria-controls="rolle">Flächen in Planung</button>
+      </div>
+    </div>
+    <div class="rolle" id="rolle" role="tabpanel" tabindex="-1"></div>
+    <details class="klappe" id="gewichtung">
+      <summary>Gewichtung anpassen</summary>
+      <div class="klappe-inhalt">
+        <p>Der Score ist der gewichtete Mittelwert der Prozentränge. Schieben Sie ein Kriterium auf 0, zählt es nicht mit.</p>
+        <div class="regler" id="regler" style="margin-top:10px"></div>
+        <p><button type="button" class="knopf" id="reset">Auf Profil zurücksetzen</button></p>
+      </div>
+    </details>
+    <details class="klappe" id="methodik">
+      <summary>Methodik und Quellen</summary>
+      <div class="klappe-inhalt" id="methodik-inhalt"></div>
+    </details>
+  </aside>
+
+  <main class="karte">
+    <div id="map" role="application" aria-label="Karte der Stadtteile von Münster"></div>
+    <details class="ebenen" id="ebenen" open>
+      <summary>Kartenebenen</summary>
+      <div class="ebenen-inhalt">
+        <label class="etikett" for="farbe">Einfärben nach</label>
+        <select id="farbe"></select>
+        <label class="haken"><input type="checkbox" id="l-verfahren" checked><span class="muster verfahren"></span>Bebauungspläne im Verfahren</label>
+        <label class="haken"><input type="checkbox" id="l-recht"><span class="muster recht"></span>Rechtskräftige Bebauungspläne</label>
+        <label class="haken"><input type="checkbox" id="l-bahn" checked><span class="muster bahn"></span>Bahnhöfe und Haltepunkte</label>
+      </div>
+    </details>
+    <div class="legende" id="legende"></div>
+  </main>
+
+  <section class="steckbrief" id="steckbrief" aria-live="polite" aria-label="Steckbrief"></section>
+</div>
+<!-- app:end -->
+<script src="vendor/leaflet.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
