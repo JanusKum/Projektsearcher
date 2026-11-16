@@ -41,8 +41,8 @@ def main() -> None:
     body = re.search(r"<!-- app:start -->(.*)<!-- app:end -->", index, re.S).group(1).strip()
     title = re.search(r"<title>.*?</title>", index, re.S).group(0)
     style = "<style>\n" + read("vendor/maplibre-gl.css") + "\n" + read("app.css") + "\n</style>"
-    daten = [inline_script(read("data.js")), inline_script(read("geo/index.js")), inline_script(read("map3d.js"))]
-    app = inline_script(read("app.js"))
+    daten = [inline_script(read("data.js")), inline_script(read("geo/index.js")), inline_script(read("markt.js")), inline_script(read("map3d.js"))]
+    app = inline_script(read("app.js")) + "\n" + inline_script(read("angebote.js"))
 
     if args.fragment:
         html = "\n".join([title, '<meta name="claude:viewport-fit-sides" content="cover">', FONTS, style, body, CDN, *daten, app])

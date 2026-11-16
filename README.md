@@ -19,6 +19,12 @@ keine vertraulichen Firmendaten.
   und die Entfernung zum nächsten Bahnhof.
 - **Flächen in Planung**: alle Bebauungspläne im Aufstellungsverfahren, sortiert nach
   dem Score ihres Stadtteils. Hier entsteht neues Baurecht.
+- **Angebots-Check**: Ein Kaufangebot eingeben oder den Inseratstext einfügen. Das Tool
+  vergleicht den Preis je m² mit tatsächlichen Verkäufen des Vorjahres für diesen Haustyp
+  und diese Baujahrsklasse, passt über den Immobilienrichtwert an die Lage an, rechnet
+  Bodenwert, Ertragswert und Kaufnebenkosten und durchsucht den Text nach Klauseln, die
+  Geld oder Zeit kosten (Erbbaurecht, Wohnrecht, Sanierungsstau, Bieterverfahren …).
+  Gespeicherte Angebote stehen als Rangliste im Reiter „Angebote" und als Punkte auf der Karte.
 - **Gewichtung anpassen**: Jedes Kriterium hat einen Regler. Das Ranking rechnet sofort neu.
 
 ## Öffnen
@@ -39,6 +45,7 @@ python pipeline/build_single_file.py        # schreibt dist/standort-scout-muens
 pip install -r pipeline/requirements.txt
 python pipeline/build_data.py               # Kennzahlen: lädt die Rohdaten, schreibt docs/data.js
 python pipeline/build_map3d.py              # 3D-Karte: lädt rund 3 GB, schreibt docs/geo/
+python pipeline/build_market.py             # Vergleichswerte und Adressen, schreibt docs/markt.js
 ```
 
 Die Rohdaten landen in `pipeline/raw/` (nicht im Repository). Erscheinen neue
@@ -60,6 +67,9 @@ sich in der Oberfläche ändern lässt.
 | Haushalte mit Kindern, Einpersonenhaushalte, Arbeitslosenanteil, Wohnungsneubau | Statistik der Stadt Münster |
 | Bebauungspläne (rechtskräftig und im Verfahren) | Geoportal der Stadt Münster |
 | Wege zu Kita, Grundschule, Bushaltestelle, Bahnhof, Hauptbahnhof | Stadt Münster, Stadtwerke Münster |
+| Angebots-Check: Immobilienrichtwerte je Zone | Gutachterausschuss Münster (BORIS NRW) |
+| Angebots-Check: Kaufpreise nach Haustyp und Baujahr, Liegenschaftszinsen, Mieten | Grundstücksmarktdaten NRW, Berichtsjahr 2025 |
+| Angebots-Check: Adressen | Hausnummernliste der Stadt Münster |
 | 3D-Karte: Gebäude und Dachformen (LoD2) | Geobasis NRW |
 | 3D-Karte: Straßen, Gewässer, Grün (tatsächliche Nutzung), Bäume, Straßennamen | Liegenschaftskataster und Baumkataster der Stadt Münster |
 
@@ -74,6 +84,17 @@ So verfälschen neu zugeschnittene Zonen das Ergebnis nicht. Außenbereichszonen
 außen vor.
 
 **Erreichbarkeit.** Mittlere Luftlinie von denselben Messpunkten zum nächsten Ziel.
+
+**Angebots-Check.** Vergleichswert = durchschnittlicher Kaufpreis je m² aus den
+beurkundeten Verkäufen des Berichtsjahrs für Haustyp und Baujahrsklasse × Lagefaktor
+(Immobilienrichtwert der Zone ÷ Median aller Zonen, begrenzt auf 0,7 bis 1,5).
+Einstufung nach Abweichung: bis −5 % günstig, bis +10 % marktüblich, darüber teuer.
+Die Gesamtwertung gewichtet den Preis mit 60 % und den Stadtteil-Score mit 40 %, je
+kritischem Punkt im Kleingedruckten gibt es 10 Punkte Abzug. Der Ertragswert folgt
+vereinfacht der ImmoWertV: (Reinertrag − Bodenwertverzinsung) × Barwertfaktor + Bodenwert,
+mit Liegenschaftszins, Bewirtschaftungskosten und Restnutzungsdauer aus den
+Grundstücksmarktdaten. Für Büro und Gewerbe gibt es in Münster keine amtlichen
+Vergleichspreise, dort zählen Lage, Bodenwert und Ertrag.
 
 **3D-Karte.** `build_map3d.py` liest aus dem LoD2-Modell die Dachflächen jedes Gebäudes
 und packt sie in Kacheln von 2 × 2 km. Die App zieht daraus die Wände bis zum Boden,
@@ -92,6 +113,11 @@ Darstellung.
 - Das Baumkataster enthält nur knapp die Hälfte der städtischen Bäume und keine privaten.
 - Die 3D-Karte hat kein Geländemodell. Münster ist flach, alle Gebäude stehen auf einer Ebene.
 - Mieten, Kaufpreise, Autobahnanschlüsse und Nahversorgung fehlen noch.
+- Der Angebots-Check kennt Zustand, Ausstattung und Energiestandard eines Objekts nicht.
+  Die Stichwortprüfung des Kleingedruckten erkennt typische Formulierungen und ersetzt
+  keine Prüfung von Grundbuch, Baulastenverzeichnis und Kaufvertrag.
+- Angebote kommen bisher von Hand in die App. Einen automatischen Abruf von
+  Immobilienportalen gibt es nicht, deren Nutzungsbedingungen verbieten das meist.
 - Der Score ist eine Vorauswahl und ersetzt keine Ankaufsprüfung.
 
 ## Mögliche nächste Schritte
@@ -105,8 +131,11 @@ Darstellung.
 
 ```
 docs/                 Web-App (index.html, app.js, map3d.js, app.css, data.js, MapLibre)
+docs/angebote.js      Angebots-Check: Bewertung, Kleingedrucktes, Formular, Rangliste
+docs/markt.js         Vergleichswerte und Adressen (erzeugt von build_market.py)
 docs/geo/             3D-Karte: Übersicht (index.js) und 108 Kacheln mit Gebäuden, Flächen, Bäumen
 pipeline/build_data.py         Rohdaten laden und zu Kennzahlen verdichten
 pipeline/build_map3d.py        3D-Gebäudemodell und Kataster zu Kartenkacheln verarbeiten
+pipeline/build_market.py       Immobilienrichtwerte, Marktdaten und Adressen aufbereiten
 pipeline/build_single_file.py  App in eine einzelne HTML-Datei packen
 ```

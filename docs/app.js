@@ -41,6 +41,7 @@
     auswahl: null,
     punkt: null,
     reiter: 'stadtteile',
+    angebot: null,
   };
   let score = {}, rang = {}, reihenfolge = [];
 
@@ -163,6 +164,7 @@
         verf: { type: 'geojson', data: D.bplan_verfahren, tolerance: 0.1 },
         auswahl: { type: 'geojson', data: leer },
         punkt: { type: 'geojson', data: leer },
+        angebote: { type: 'geojson', data: leer },
         bahn: { type: 'geojson', data: punkte(D.bahn.map((b) => [b.name, b.lon, b.lat])) },
         orte: { type: 'geojson', data: punkte(IDS.map((id) => [STT[id].properties.name, STT[id].properties.lon, STT[id].properties.lat])) },
         str: { type: 'geojson', data: punkte(K.strassen) },
@@ -187,6 +189,7 @@
         { id: 'auswahl-rand', type: 'line', source: 'auswahl', paint: { 'line-color': css('--surface'), 'line-width': 6.5 } },
         { id: 'auswahl-linie', type: 'line', source: 'auswahl', paint: { 'line-color': css('--ink'), 'line-width': 2.5 } },
         { id: 'punkt', type: 'circle', source: 'punkt', paint: { 'circle-radius': 7, 'circle-color': css('--plan'), 'circle-stroke-color': css('--surface'), 'circle-stroke-width': 2.5, 'circle-pitch-alignment': 'map' } },
+        { id: 'angebote', type: 'circle', source: 'angebote', paint: { 'circle-radius': 8, 'circle-color': ['match', ['get', 'stufe'], 'gut', '#0ca30c', 'warn', '#fab219', 'krit', '#d03b3b', css('--ink-2')], 'circle-stroke-color': css('--surface'), 'circle-stroke-width': 2.5 } },
         { id: 'bahn', type: 'circle', source: 'bahn', paint: { 'circle-radius': 5, 'circle-color': css('--ink'), 'circle-stroke-color': css('--surface'), 'circle-stroke-width': 2 } },
         { id: 'str-namen', type: 'symbol', source: 'str', minzoom: 15.2, layout: { 'icon-image': textBild('str'), 'icon-padding': 6 } },
         { id: 'bahn-namen', type: 'symbol', source: 'bahn', minzoom: 12.4, layout: { 'icon-image': textBild('bahn'), 'icon-anchor': 'bottom', 'icon-offset': [0, -14], 'icon-padding': 2 } },
@@ -195,7 +198,7 @@
     };
   }
 
-  let map = null, bereit = false, szene = null, tippFenster = null;
+  let map = null, bereit = false, szene = null, tippFenster = null, angebotsPunkte = [];
   const nutzKacheln = [];
   const BESCHRIFTUNG = { ort: ['600 15px "Barlow Condensed", "Barlow", system-ui, sans-serif', 0.4], bahn: ['600 13px "Barlow Condensed", "Barlow", system-ui, sans-serif', 0.3], str: ['500 11.5px "Barlow", system-ui, sans-serif', 0] };
   // Beschriftungen entstehen als kleine Bilder aus der Seitenschrift – so braucht die Karte keinen Schriftserver.
@@ -292,6 +295,7 @@
       himmel();
       zeichneFlaechen();
       zeichneAuswahl();
+      map.getSource('angebote').setData({ type: 'FeatureCollection', features: angebotsPunkte });
       ladeKacheln();
     });
     let takt = 0;
@@ -299,7 +303,7 @@
     map.on('moveend', () => ladeKacheln());
 
     tippFenster = new maplibregl.Popup({ closeButton: false, closeOnClick: false, className: 'tipp', offset: 14, maxWidth: '260px' });
-    const TIPP_EBENEN = ['bahn', 'verf-fill', 'recht-fill', 'zonen-fill', 'stt-prisma', 'stt-flach'];
+    const TIPP_EBENEN = ['angebote', 'bahn', 'verf-fill', 'recht-fill', 'zonen-fill', 'stt-prisma', 'stt-flach'];
     map.on('mousemove', (e) => {
       if (!bereit) return;
       const f = map.queryRenderedFeatures(e.point, { layers: TIPP_EBENEN })
@@ -308,7 +312,8 @@
       if (!f) { tippFenster.remove(); markiereZeile(null); return; }
       const p = f.properties;
       let html = '';
-      if (f.layer.id === 'bahn') html = `<b>${esc(p.name)}</b><br><span>Bahnhof / Haltepunkt</span>`;
+      if (f.layer.id === 'angebote') html = `<b>${esc(p.titel)}</b><br><span>${zahl(+p.preis, 0)}\u00a0€ · ${esc(p.urteil)}</span>`;
+      else if (f.layer.id === 'bahn') html = `<b>${esc(p.name)}</b><br><span>Bahnhof / Haltepunkt</span>`;
       else if (f.layer.id === 'verf-fill') html = `<b>B-Plan ${esc(p.plannr)} · im Verfahren</b><br><span>${esc(p.name)} · ${zahl(+p.ha, 1)} ha</span>`;
       else if (f.layer.id === 'recht-fill') html = `<b>B-Plan ${esc(p.plannr)}</b>${p.jahr ? ' · seit ' + p.jahr : ''}<br><span>${esc(p.name)}</span>`;
       else if (f.layer.id === 'zonen-fill') html = `<b>${esc(p.nuta_text)}</b><br><span>${zahl(+p.brw, 0)} €/m² · Zone ${esc(p.nr)}, ${esc(p.ort)}</span>`;
@@ -318,6 +323,8 @@
     map.getCanvas().addEventListener('mouseleave', () => { tippFenster.remove(); markiereZeile(null); });
 
     map.on('click', (e) => {
+      const ang = map.queryRenderedFeatures(e.point, { layers: ['angebote'] })[0];
+      if (ang && window.ScoutAngebote) { state.reiter = 'angebote'; window.ScoutAngebote.waehle(ang.properties.id); return; }
       // In der Übersicht zählt die angeklickte Säule; hineingezoomt der genaue Punkt am Boden.
       const saeule = map.getZoom() < 13.1 && state.farbe !== 'zonen' ? map.queryRenderedFeatures(e.point, { layers: ['stt-prisma'] })[0] : null;
       if (saeule) waehle(saeule.properties.id, null);
@@ -397,6 +404,7 @@
     map.setPaintProperty('punkt', 'circle-stroke-color', css('--surface'));
     map.setPaintProperty('bahn', 'circle-color', css('--ink'));
     map.setPaintProperty('bahn', 'circle-stroke-color', css('--surface'));
+    map.setPaintProperty('angebote', 'circle-stroke-color', css('--surface'));
   }
   function themaGewechselt() {
     if (!bereit) return;
@@ -428,8 +436,12 @@
     $('frage').textContent = state.profil.frage;
     $('tab-stadtteile').setAttribute('aria-selected', state.reiter === 'stadtteile');
     $('tab-plaene').setAttribute('aria-selected', state.reiter === 'plaene');
+    $('tab-angebote').setAttribute('aria-selected', state.reiter === 'angebote');
     $('rolle').setAttribute('aria-labelledby', 'tab-' + state.reiter);
-    if (state.reiter === 'stadtteile') {
+    if (state.reiter === 'angebote') {
+      if (window.ScoutAngebote) window.ScoutAngebote.zeichneListe($('rolle'));
+      else $('rolle').innerHTML = '<p class="hinweis">Der Angebots-Check wird geladen …</p>';
+    } else if (state.reiter === 'stadtteile') {
       $('rolle').innerHTML = '<ol class="rang-liste">' + reihenfolge.map((id) => {
         const p = STT[id].properties;
         const gruende = staerken(id, 2).map((k) => `${esc(IND[k].short)} ${w(k, D.werte[id][k])}`).join(' · ') || 'keine ausgeprägte Stärke in diesem Profil';
@@ -463,7 +475,7 @@
   }
   $('rolle').addEventListener('click', (e) => {
     const z = e.target.closest('.zeile');
-    if (!z) return;
+    if (!z || z.classList.contains('ang-zeile')) return;
     if (z.dataset.id) {
       waehle(z.dataset.id, null);
       if (map) fliegeZuKern(z.dataset.id);
@@ -484,7 +496,7 @@
     hervor = id;
     if (bereit) map.setFilter('hervor', ['==', ['get', 'id'], id || '']);
   }
-  ['stadtteile', 'plaene'].forEach((r) => $('tab-' + r).addEventListener('click', () => { state.reiter = r; zeichneListe(); }));
+  ['stadtteile', 'plaene', 'angebote'].forEach((r) => $('tab-' + r).addEventListener('click', () => { state.reiter = r; zeichneListe(); }));
 
   /* ---------------------------------------------------------- Diagramm */
   // Eine Reihe als Linie; optional gestrichelte Fortsetzung (Prognose). Mit Fadenkreuz beim Überfahren.
@@ -570,6 +582,7 @@
 
   function zeichneSteckbrief() {
     const el = $('steckbrief'), id = state.auswahl;
+    if (window.ScoutAngebote && window.ScoutAngebote.zeichneDetail(el)) return;
     if (!id) {
       el.innerHTML = '<div class="abschnitt"><h3>Kein Stadtteil gewählt</h3><p class="lead">Wählen Sie einen Stadtteil in der Liste oder klicken Sie in die Karte. Hineingezoomt zeigt ein Klick auch Bodenrichtwert und Baurecht genau an dieser Stelle.</p></div>';
       return;
@@ -627,6 +640,7 @@
   }
 
   function waehle(id, punkt) {
+    if (state.angebot !== 'neu') state.angebot = null;   // ein offenes Formular bleibt stehen
     state.auswahl = id;
     state.punkt = punkt;
     zeichneAuswahl();
@@ -692,6 +706,31 @@
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themaGewechselt);
   new MutationObserver(themaGewechselt).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   if (map) new ResizeObserver(() => map.resize()).observe($('map'));
+
+  /* ---------------------------------------------------------- Schnittstelle für den Angebots-Check */
+  const profilScores = {};
+  function scoreFuer(profilId, sttId) {
+    if (!profilScores[profilId]) {
+      const g = PROFILE.find((p) => p.id === profilId).w, s = {};
+      IDS.forEach((id) => { let a = 0, b = 0; for (const k in g) { const r = D.raenge[id][k]; if (r != null) { a += g[k] * r; b += g[k]; } } s[id] = b ? a / b : 0; });
+      const folge = IDS.slice().sort((x, y) => s[y] - s[x]), r = {};
+      folge.forEach((id, i) => { r[id] = i + 1; });
+      profilScores[profilId] = { s, r };
+    }
+    return { score: profilScores[profilId].s[sttId], rang: profilScores[profilId].r[sttId] };
+  }
+  window.ScoutApp = {
+    D, STT, IDS, PROFILE, state, zahl, esc, treffer, rahmen, scoreFuer, standortCheck, waehle,
+    neuZeichnen: () => { zeichneListe(); zeichneSteckbrief(); },
+    setzeAngebote: (features) => { angebotsPunkte = features; if (bereit) map.getSource('angebote').setData({ type: 'FeatureCollection', features }); },
+    fliegeZu: (lon, lat, zoom) => {
+      if (!map) return;
+      const ziel = { center: [lon, lat], zoom, pitch: 60, bearing: -18, padding: rand(), duration: 2400 };
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) ziel.duration = 0;
+      ladeKacheln({ lng: lon, lat }, zoom);
+      map.flyTo(ziel);
+    },
+  };
 
   /* ---------------------------------------------------------- Start */
   zeichneProfile();
