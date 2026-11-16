@@ -9,6 +9,7 @@
   if (!A || !MK) return;
   const { D, STT, zahl, esc } = A;
   const M = MK.markt, JAHR = new Date().getFullYear();
+  const datum = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }); };
   const eur = (v, d) => (v == null ? '–' : zahl(v, d || 0) + ' €');
   const proz = (v, d) => (v > 0 ? '+' : v < 0 ? '−' : '') + zahl(Math.abs(v), d == null ? 0 : d) + ' %';
 
@@ -208,6 +209,8 @@
       text: 'Baugrundstück in Albachten, 620 m², Kaufpreis 365.000 €. Bebaubar mit einem Doppelhaus, noch zu vermessen. Im Grundbuch ist ein Leitungsrecht eingetragen. Provisionsfrei.' },
   ];
   let liste = [], db = null, sample = null, geladen = false, beispieleAus = false, schreibFehler = '';
+  let stadt = (MK.stadt && MK.stadt.liste) || [], stadtStand = MK.stadt && MK.stadt.stand, lauf = null;
+  const zeit = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' Uhr'; };
   try { beispieleAus = localStorage.getItem('scout-beispiele-aus') === '1'; } catch (e) { /* ohne Browserspeicher */ }
   const lokal = {
     lies() { try { return JSON.parse(localStorage.getItem('scout-angebote') || '[]'); } catch (e) { return []; } },
@@ -254,17 +257,27 @@
       <div class="ang-kopf">
         <button type="button" class="knopf haupt" data-akt="neu">Angebot prüfen</button>
         <p class="hinweis-klein">${bsp ? 'Noch keine eigenen Angebote. Die drei Einträge unten sind erfundene Beispiele und zeigen, wie die Bewertung aussieht.' : `${zeilen.length === 1 ? '1 Angebot' : zeilen.length + ' Angebote'}, sortiert nach Gesamtwertung: 60 % Preis, 40 % Lage, je kritischem Punkt im Kleingedruckten 10 Punkte Abzug.`}${geladen ? '' : ' Angebote werden geladen …'}</p>
+        ${db ? `<p class="hinweis-klein">${lauf && lauf.zeit ? `Automatische Suche zuletzt gelaufen: ${zeit(lauf.zeit)}${lauf.neu ? `, ${+lauf.neu} neu` : ''}. Sie liest stündlich die Suchauftrags-Mails und die Seite der Stadt.` : 'Automatische Suche: noch kein Lauf erfasst.'}</p>` : ''}
         ${schreibFehler ? `<p class="hinweis-klein fehler">${esc(schreibFehler)}</p>` : ''}
         ${bsp ? '<button type="button" class="knopf" data-akt="bsp-aus">Beispiele ausblenden</button>' : ''}
       </div>
-      <ol class="rang-liste">${zeilen.map(({ a, r }, i) => `
+      <ol class="rang-liste ang-liste">${zeilen.map(({ a, r }, i) => `
         <li><button type="button" class="zeile ang-zeile" data-ang="${esc(a.id)}" aria-current="${A.state.angebot === a.id}">
           <span class="rang num">${i + 1}</span>
           <span class="titel">${esc(a.titel || r.art.label)} ${a.beispiel ? '<span class="pille bsp">Beispiel</span>' : ''}<span class="unter">${esc(r.art.label)}${r.stt ? ' · ' + esc(STT[r.stt].properties.name) : ''}</span></span>
           <span class="wert num">${r.gesamt == null ? '–' : zahl(r.gesamt, 0)}</span>
           <span class="gruende">${eur(a.preis)}${r.euqm ? ' · ' + zahl(r.euqm, 0) + ' €/m²' : ''}${r.abw != null ? ' · ' + proz(r.abw) + ' zum Vergleichswert' : ''}</span>
           <span class="gruende">${pille(r)}${kleinPille(r)}</span>
-        </button></li>`).join('')}</ol>`;
+          ${a.quelle && a.quelle !== 'manuell' ? `<span class="gruende herkunft">${esc(a.quelle)}${a.erfasst ? ' · erfasst ' + datum(a.erfasst) : ''}</span>` : ''}
+        </button></li>`).join('')}</ol>
+      ${stadt.length ? `<div class="ang-kopf"><h3 class="zwischen">Ausschreibungen der Stadt Münster</h3>
+        <p class="hinweis-klein">Grundstücke, die das Amt für Immobilienmanagement verkauft oder vergibt. Laufende und kommende Verfahren stehen oben.${stadtStand ? ' Stand ' + datum(stadtStand) + '.' : ''}</p></div>
+      <ol class="rang-liste">${stadt.slice().sort((x, y) => (y.offen ? 1 : 0) - (x.offen ? 1 : 0)).map((s) => `
+        <li class="aus-zeile">
+          <span class="titel">${esc(s.info || s.rubrik)}<span class="unter">${esc([s.rubrik, s.stadtteil, s.adresse].filter(Boolean).join(' · '))}</span></span>
+          <span class="gruende"><span class="pille ${s.offen ? 'gut' : 'neutral'}"><i aria-hidden="true">${s.offen ? '▲' : '●'}</i>${esc(s.status || s.termin || 'ohne Angabe')}</span>${s.offen && s.termin ? ' ' + esc(s.termin) : ''}</span>
+          <span class="gruende"><a href="${esc(s.url)}" target="_blank" rel="noopener">Unterlagen der Stadt</a> · <button type="button" class="link" data-akt="aus-karte" data-ort="${esc(s.adresse + ' ' + s.stadtteil)}">Auf der Karte zeigen</button></span>
+        </li>`).join('')}</ol>` : ''}`;
     A.setzeAngebote(zeilen.filter((z) => z.a.lon != null).map(({ a, r }) => ({ type: 'Feature', properties: { id: a.id, stufe: r.stufe || 'neutral', titel: a.titel || r.art.label, urteil: r.urteil || 'Kein Preisvergleich', preis: a.preis || 0 }, geometry: { type: 'Point', coordinates: [a.lon, a.lat] } })));
   }
 
@@ -420,6 +433,7 @@
     else if (akt === 'bsp-aus') { beispieleAus = true; try { localStorage.setItem('scout-beispiele-aus', '1'); } catch (x) { /* ohne Browserspeicher */ } A.state.angebot = null; A.neuZeichnen(); }
     else if (akt === 'auslesen') { const t = wertVon('text'); if (t) { fuelle(leseText(t)); document.getElementById('ang-status').textContent = 'Felder gefüllt. Bitte prüfen.'; } }
     else if (akt === 'claude') frageClaude();
+    else if (akt === 'aus-karte') { const o = verorte(k.dataset.ort, k.dataset.ort); if (o) A.fliegeZu(o.lon, o.lat, o.genau === 'stadtteil' ? 14.6 : 16); }
     else if (akt === 'stadtteil') { A.state.angebot = null; A.waehle(k.dataset.stt, null); }
     else if (akt === 'bearbeiten') { entwurf = Object.assign({}, sichtbar().find((x) => x.id === A.state.angebot)); formNeu = true; A.state.angebot = 'neu'; A.neuZeichnen(); }
     else if (akt === 'loeschen') { const id = A.state.angebot; A.state.angebot = null; loesche(id).then(A.neuZeichnen); A.neuZeichnen(); }
@@ -450,6 +464,14 @@
         liste = snap.docs.map((doc) => Object.assign({}, doc.data(), { id: doc.id }));
         A.neuZeichnen();
       }, () => { clearTimeout(frist); geladen = true; db = null; liste = lokal.lies(); A.neuZeichnen(); });
+      db.doc('status/lauf').onSnapshot((doc) => { lauf = doc.exists ? doc.data() : null; A.neuZeichnen(); }, () => {});
+      // Ausschreibungen der Stadt: die geplante Aufgabe hält sie in der Datenbank aktuell, sonst gilt der Stand aus markt.js
+      db.collection('ausschreibungen').onSnapshot((snap) => {
+        if (snap.empty) return;
+        stadt = snap.docs.map((doc) => Object.assign({}, doc.data(), { id: doc.id }));
+        stadtStand = stadt.map((s) => s.gelesen).filter(Boolean).sort().pop() || stadtStand;
+        A.neuZeichnen();
+      }, () => {});
     });
     window.claude.use('sample').then((s) => {
       sample = s;

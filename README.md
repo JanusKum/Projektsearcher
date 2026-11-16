@@ -116,9 +116,27 @@ Darstellung.
 - Der Angebots-Check kennt Zustand, Ausstattung und Energiestandard eines Objekts nicht.
   Die Stichwortprüfung des Kleingedruckten erkennt typische Formulierungen und ersetzt
   keine Prüfung von Grundbuch, Baulastenverzeichnis und Kaufvertrag.
-- Angebote kommen bisher von Hand in die App. Einen automatischen Abruf von
-  Immobilienportalen gibt es nicht, deren Nutzungsbedingungen verbieten das meist.
+- Die App ruft keine Immobilienportale ab, deren Nutzungsbedingungen verbieten das meist.
+  Angebote kommen von Hand hinein oder über die Benachrichtigungs-Mails eigener
+  Suchaufträge (siehe „Automatische Suche").
 - Der Score ist eine Vorauswahl und ersetzt keine Ankaufsprüfung.
+
+## Automatische Suche
+
+Die veröffentlichte Seite hat eine Datenbank. Eine geplante Aufgabe („Standort-Scout:
+Angebote aktualisieren", stündlich) schreibt dort hinein:
+
+- **Suchauftrags-Mails**: Wer auf ImmoScout24, Immowelt, Immonet oder Kleinanzeigen einen
+  Suchauftrag mit E-Mail-Benachrichtigung anlegt, bekommt neue Inserate ins Postfach. Die
+  Aufgabe liest diese Mails (nur lesend) und legt jedes Kaufangebot in Münster als
+  Dokument in der Collection `angebote` ab. Dafür braucht die Aufgabe den Gmail-Connector.
+- **Ausschreibungen der Stadt**: Die öffentliche Seite des Amts für Immobilienmanagement
+  wird einmal je Lauf gelesen (`pipeline/stadt_angebote.py`), Änderungen landen in der
+  Collection `ausschreibungen`.
+- Der letzte Lauf steht im Dokument `status/lauf` und in der App über der Angebotsliste.
+
+Die lokale Fassung (`docs/index.html`) hat keine Datenbank. Dort liegen Angebote im
+Browser, und die Ausschreibungen zeigen den Stand des letzten `build_market.py`.
 
 ## Mögliche nächste Schritte
 
@@ -137,5 +155,6 @@ docs/geo/             3D-Karte: Übersicht (index.js) und 108 Kacheln mit Gebäu
 pipeline/build_data.py         Rohdaten laden und zu Kennzahlen verdichten
 pipeline/build_map3d.py        3D-Gebäudemodell und Kataster zu Kartenkacheln verarbeiten
 pipeline/build_market.py       Immobilienrichtwerte, Marktdaten und Adressen aufbereiten
+pipeline/stadt_angebote.py     Ausschreibungen der Stadt Münster auslesen
 pipeline/build_single_file.py  App in eine einzelne HTML-Datei packen
 ```

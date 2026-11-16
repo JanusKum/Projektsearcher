@@ -7,6 +7,8 @@ Quellen (alle amtlich und offen):
     Vergleichswerte in €/m² Wohnfläche für Eigentumswohnungen und Einfamilienhäuser
   * Grundstücksmarktdaten NRW: durchschnittliche Kaufpreise nach Haustyp und Baujahr,
     Liegenschaftszinssätze, Mieten und Bewirtschaftungskosten für Münster
+  * Immobilienangebote der Stadt Münster (Amt für Immobilienmanagement): laufende und
+    kommende Ausschreibungen von Grundstücken
   * Hausnummernliste der Stadt Münster: Adressen mit Koordinaten, damit die App ein
     Angebot ohne Internetdienst auf der Karte verorten kann
 
@@ -31,6 +33,8 @@ import geopandas as gpd
 import pandas as pd
 import shapely
 from pyproj import Transformer
+
+import stadt_angebote
 
 warnings.filterwarnings("ignore")
 
@@ -170,7 +174,12 @@ def main() -> None:
     fetch(args.offline)
     city = gpd.read_file(RAW / "stadtteile.geojson").to_crs(25832).geometry.union_all()
     zonen, stand = irw(city)
-    data = {"markt": market(), "irw": zonen, "irw_stand": stand, "adressen": addresses()}
+    # Ausschreibungen der Stadt: Momentaufnahme für die App ohne Datenbank (offline bleibt der letzte Stand)
+    stadt_cache = RAW / "stadt_angebote.json"
+    if not args.offline:
+        stadt_cache.write_text(json.dumps({"stand": time.strftime("%Y-%m-%d"), "liste": stadt_angebote.lade()}, ensure_ascii=False), encoding="utf-8")
+    stadt = json.loads(stadt_cache.read_text(encoding="utf-8")) if stadt_cache.exists() else {"stand": None, "liste": []}
+    data = {"markt": market(), "irw": zonen, "irw_stand": stand, "stadt": stadt, "adressen": addresses()}
     OUT.write_text("window.SCOUT_MARKT=" + json.dumps(data, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")
     werte = {tm: sorted(f["properties"]["wert"] for f in zonen["features"] if f["properties"]["tm"] == tm) for tm in ("etw", "efh")}
     for tm, v in werte.items():
