@@ -1,0 +1,8 @@
+[
+ {"id": "v1", "text": "Dieser Herd kocht. Aber er wird nicht heiß.", "voice": "de-DE-ConradNeural", "rate": "-6%", "pitch": "-4Hz"},
+ {"id": "v2", "text": "Unter dem Glas liegt eine Kupferspule.", "voice": "de-DE-ConradNeural", "rate": "-4%", "pitch": "-4Hz"},
+ {"id": "v3", "text": "Der Strom wechselt 20.000-mal pro Sekunde.", "say": "Der Strom wechselt zwanzigtausendmal pro Sekunde.", "voice": "de-DE-ConradNeural", "rate": "-2%", "pitch": "-4Hz"},
+ {"id": "v4", "text": "Das Magnetfeld geht durchs Glas – und erzeugt Wirbelströme im Topf.", "voice": "de-DE-ConradNeural", "rate": "+2%", "pitch": "-4Hz"},
+ {"id": "v5", "text": "Ein Glastopf? Bleibt kalt.", "voice": "de-DE-ConradNeural", "rate": "-8%", "pitch": "-4Hz"},
+ {"id": "v6", "text": "Die Hitze entsteht im Topf selbst.", "voice": "de-DE-ConradNeural", "rate": "-8%", "pitch": "-4Hz"}
+]

@@ -1,0 +1,32 @@
+[
+ {
+  "t0": 0.65,
+  "t1": 4.644,
+  "text": "Dieser Herd kocht. Aber er wird nicht heiß."
+ },
+ {
+  "t0": 5.45,
+  "t1": 8.219,
+  "text": "Unter dem Glas liegt eine Kupferspule."
+ },
+ {
+  "t0": 10.3,
+  "t1": 13.764,
+  "text": "Der Strom wechselt 20.000-mal pro Sekunde."
+ },
+ {
+  "t0": 15.25,
+  "t1": 19.515,
+  "text": "Das Magnetfeld geht durchs Glas – und erzeugt Wirbelströme im Topf."
+ },
+ {
+  "t0": 21.75,
+  "t1": 25.226,
+  "text": "Ein Glastopf? Bleibt kalt."
+ },
+ {
+  "t0": 25.7,
+  "t1": 28.4,
+  "text": "Die Hitze entsteht im Topf selbst."
+ }
+]

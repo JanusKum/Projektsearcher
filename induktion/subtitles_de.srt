@@ -1,0 +1,23 @@
+1
+00:00:00,650 --> 00:00:04,644
+Dieser Herd kocht. Aber er wird nicht heiß.
+
+2
+00:00:05,450 --> 00:00:08,219
+Unter dem Glas liegt eine Kupferspule.
+
+3
+00:00:10,300 --> 00:00:13,764
+Der Strom wechselt 20.000-mal pro Sekunde.
+
+4
+00:00:15,250 --> 00:00:19,515
+Das Magnetfeld geht durchs Glas – und erzeugt Wirbelströme im Topf.
+
+5
+00:00:21,750 --> 00:00:25,226
+Ein Glastopf? Bleibt kalt.
+
+6
+00:00:25,700 --> 00:00:28,400
+Die Hitze entsteht im Topf selbst.
