@@ -3,3 +3,4 @@ stills*/
 sheet*.jpg
 voices/.cache/
 music/score.wav
+.mux_tmp.wav
