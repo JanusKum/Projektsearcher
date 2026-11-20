@@ -11,6 +11,8 @@ ev = json.load(open(os.path.join(HERE, 'events.json')))
 DUR = ev['dur']; N = int(round(DUR * SR))
 fx = np.zeros((N, 2)); vo = np.zeros((N, 2))
 HUSH, DROP = 19.375, 20.0
+VOICES = os.environ.get('VOICES', 'voices')   # 'voices_vidiq' = the vidIQ narration (Otto)
+VO_SHIFT = {'v4': -.25} if VOICES == 'voices_vidiq' else {}   # its line 4 is longer: start it on the cut so it ends before the silence
 
 
 def nz(d): return rng.standard_normal(int(round(d * SR)))
@@ -108,7 +110,7 @@ for e in ev['ev']:
         add(fx, glass_ding((1175, 1480, 1760), 2.8, .7), t, 1, 0)
     elif ty == 'tick': add(fx, glass_tick(e['v']), t, 1, .1)
     elif ty == 'vo':
-        y, sr = sf.read(os.path.join(HERE, 'voices', e['id'] + '.wav'))
+        y, sr = sf.read(os.path.join(HERE, VOICES, e['id'] + '.wav')); t += VO_SHIFT.get(e['id'], 0)
         if y.ndim > 1: y = y.mean(1)
         y = soxr.resample(y, sr, SR)
         y = hp(y, 90); y = compress(y / (np.abs(y).max() + 1e-9) * .9, .3, 3.0); add(vo, y, t, 1.0, 0)

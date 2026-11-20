@@ -12,7 +12,7 @@ echo "== 2. score"
 cd "$LIB"
 echo "== 3. events → foley + mix"
 node core/render/events.mjs "$HERE"
-"$PY" "$HERE/mix.py"
+VOICES=voices_vidiq "$PY" "$HERE/mix.py"   # vidIQ narration (Otto); voices_vidiq/ holds the downloaded lines
 echo "== 4. picture (1080×1920, 24 fps)"
 node core/render/video.mjs "$HERE" --fps 24 --workers 3 --size 1080x1920 --out "$HERE/out/video.mp4"
 echo "== 5. mux (−14 LUFS) + subtitles"
