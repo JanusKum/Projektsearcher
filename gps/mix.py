@@ -46,17 +46,17 @@ for e in ev['ev']:
     elif ty == 'vo':
         y, sr = sf.read(os.path.join(HERE, 'voices', e['id'] + '.wav'))
         if y.ndim > 1: y = y.mean(1)
-        y = soxr.resample(y, sr, SR); y = hp(y, 90); y = compress(y / (np.abs(y).max() + 1e-9) * .9, .3, 3.0); add(vo, y, t, 1.0, 0)
+        y = soxr.resample(y, sr, SR) if sr != SR else y; y = y / (np.abs(y).max() + 1e-9) * .9; add(vo, y, t, 1.0, 0)   # voice already EQ'd and lightly compressed (voices/*.wav at 48 kHz)
 a, b = int(19.2 * SR), int(19.5 * SR); fx[a:b] = 0
 mus, msr = sf.read(os.path.join(HERE, 'music', 'score.wav'))
 if msr != SR: mus = soxr.resample(mus, msr, SR)
 mus = np.pad(mus[:N], ((0, max(0, N - len(mus))), (0, 0)))
 venv = uniform_filter1d(maximum_filter1d(np.abs(vo).max(1), int(.25 * SR)), int(.12 * SR))
 k = np.clip(venv / (venv.max() * .25 + 1e-9), 0, 1)
-duck = 1 - (1 - 10 ** (-10 / 20)) * k
+duck = 1 - (1 - 10 ** (-14 / 20)) * k
 # dip the music 300 Hz–4 kHz under the voice (the voice's band), on top of the duck
 band = np.stack([bp(mus[:, c], 300, 4000) for c in range(2)], 1)
-mus_d = mus - band * (0.5 * k)[:, None]
+mus_d = mus - band * (0.7 * k)[:, None]
 mix = mus_d * duck[:, None] * .8 + fx * .3 * (1 - .5 * k)[:, None] + vo
 mix = mix / (np.abs(mix).max() + 1e-9) * .89
 mix = np.stack([limit(mix[:, 0], .7), limit(mix[:, 1], .7)], 1) / .7 * .85
