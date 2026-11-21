@@ -1,0 +1,57 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Kanal-Profilbild</title>
+<style>@font-face{font-family:Jost;src:url(fonts/Jost.ttf) format('truetype');font-weight:100 900;}html,body{margin:0;background:#1D2052}svg{display:block}text{font-family:Jost,sans-serif}</style></head>
+<body><svg id="s" width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg"></svg>
+<script src="flat.js"></script>
+<script>
+const V = new URLSearchParams(location.search).get('v') || '1';   // 1 = B-Planet, 3 = Glühbirne (2 verworfen: zu nah am React-Logo)
+svg = document.getElementById('s'); defs = el('defs');
+const starsOut = (cx, cy, rr, seed, n = 90) => { const R = rng(seed); for (let i = 0; i < n; i++) { const x = R() * W, y = R() * H, k = R(); if (Math.hypot(x - cx, y - cy) < rr) continue; el('circle', { cx: r1(x), cy: r1(y), r: r1(k < .7 ? 2 + R() * 2 : 3.5 + R() * 2.5), fill: k < .55 ? C.mist : k < .85 ? C.cream : C.sun }); } };
+el('rect', { width: W, height: H, fill: C.night });
+const ring = (cx, cy, rx, ry, rot, col, w, front) => {   // half an ellipse ring (back or front)
+  el('path', { d: `M${cx - rx},${cy} A${rx},${ry} 0 0 ${front ? 0 : 1} ${cx + rx},${cy}`, fill: 'none', stroke: col, 'stroke-width': w, 'stroke-linecap': 'round', transform: `rotate(${rot} ${cx} ${cy})` });
+};
+if (V === '1') {
+  // 1 · "B" monogram as a planet: a bold B in the middle of a ringed world
+  starsOut(540, 540, 430, 5, 100);
+  for (const [x, y, s, c] of [[170, 200, 20, C.cream], [910, 180, 16, C.sun], [900, 900, 18, C.cream], [160, 880, 13, C.sun]]) sparkle(svg, x, y, s, c);
+  const cx = 540, cy = 540;
+  halo(svg, cx, cy, 330, 390);
+  ring(cx, cy, 440, 120, -18, C.sunD, 30, false);
+  shaded(svg, 'circle', { cx, cy, r: 280 }, C.blue, C.blueD, 50, 42);
+  text(svg, cx - 8, cy + 128, 'B', { 'font-size': 380, 'font-weight': 800, fill: C.cream, 'text-anchor': 'middle' });
+  ring(cx, cy, 440, 120, -18, C.sun, 30, true);
+  el('circle', { cx: 905, cy: 395, r: 26, fill: C.coral }); el('circle', { cx: 905, cy: 395, r: 12, fill: C.cream });
+}
+if (V === '2') {
+  // 2 · atom of tech: three orbits round a planet nucleus, one electron is a spark (science + space in one mark)
+  starsOut(540, 540, 460, 9, 90);
+  const cx = 540, cy = 540;
+  halo(svg, cx, cy, 170, 220);
+  for (const rot of [0, 60, 120]) ring(cx, cy, 400, 140, rot, C.mint, 18, false);
+  shaded(svg, 'circle', { cx, cy, r: 140 }, C.sun, C.sunD, 26, 22);
+  el('circle', { cx: cx - 30, cy: cy - 30, r: 34, fill: C.cream });
+  for (const rot of [0, 60, 120]) ring(cx, cy, 400, 140, rot, C.mint, 18, true);
+  const elec = [[0, 0.6, C.coral], [60, 2.6, C.cream], [120, 4.4, C.blue]];
+  for (const [rot, a, col] of elec) { const ra = rot * Math.PI / 180, x = Math.cos(a) * 400, y = Math.sin(a) * 140;
+    el('circle', { cx: r1(cx + x * Math.cos(ra) - y * Math.sin(ra)), cy: r1(cy + x * Math.sin(ra) + y * Math.cos(ra)), r: 36, fill: col }); }
+}
+if (V === '3') {
+  // 3 · the "aha" bulb: a light bulb whose filament is a tiny orbit with a planet; rays as hard dashes
+  starsOut(540, 520, 440, 13, 80);
+  const cx = 540, cy = 500;
+  for (let i = 0; i < 9; i++) { const a = -Math.PI + (i + 0.5) / 9 * Math.PI, r0 = 300, r1_ = 365;
+    el('path', { d: `M${r1(cx + Math.cos(a) * r0)},${r1(cy + Math.sin(a) * r0)}L${r1(cx + Math.cos(a) * r1_)},${r1(cy + Math.sin(a) * r1_)}`, stroke: C.sun, 'stroke-width': 22, 'stroke-linecap': 'round' }); }
+  halo(svg, cx, cy, 255, 285);
+  shaded(svg, 'circle', { cx, cy, r: 225 }, C.cream, C.creamD, 36, 30);
+  shaded(svg, 'rect', { x: cx - 120, y: cy + 200, width: 240, height: 170, rx: 30 }, C.cream, C.creamD, 20, 0);
+  for (const dy of [250, 300, 350]) el('rect', { x: cx - 130, y: cy + dy, width: 260, height: 30, rx: 15, fill: C.mist });
+  el('rect', { x: cx - 70, y: cy + 380, width: 140, height: 40, rx: 20, fill: C.n3 });
+  // filament: an orbit with a planet
+  ring(cx, cy + 20, 130, 46, -16, C.sunD, 14, false);
+  shaded(svg, 'circle', { cx, cy: cy + 20, r: 70 }, C.blue, C.blueD, 14, 12);
+  el('path', { d: blobPath(polar(cx - 14, cy + 8, 7, a => 30 * (0.8 + 0.25 * Math.sin(a * 3)))), fill: C.mint });
+  ring(cx, cy + 20, 130, 46, -16, C.sun, 14, true);
+  sparkle(svg, cx + 150, cy - 110, 30, C.sun);
+}
+window.READY = true; window.DUR = 1; window.render = () => {};
+</script></body></html>
