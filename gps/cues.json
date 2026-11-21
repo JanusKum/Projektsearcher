@@ -1,0 +1,62 @@
+[
+ {
+  "t0": 0.45,
+  "t1": 2.45,
+  "text": "Dein Handy weiß, wo du bist."
+ },
+ {
+  "t0": 2.45,
+  "t1": 4.75,
+  "text": "Auf wenige Meter genau."
+ },
+ {
+  "t0": 5.0,
+  "t1": 7.0,
+  "text": "Dafür fragt es Satelliten."
+ },
+ {
+  "t0": 7.0,
+  "t1": 9.75,
+  "text": "20.000 km über dir."
+ },
+ {
+  "t0": 9.85,
+  "t1": 11.65,
+  "text": "An Bord: Atomuhren."
+ },
+ {
+  "t0": 11.65,
+  "t1": 15.5,
+  "text": "Ihr Signal rast mit Lichtgeschwindigkeit zu dir."
+ },
+ {
+  "t0": 15.65,
+  "t1": 17.45,
+  "text": "Aus vier Laufzeiten berechnet"
+ },
+ {
+  "t0": 17.45,
+  "t1": 19.25,
+  "text": "dein Handy, wo du stehst."
+ },
+ {
+  "t0": 19.6,
+  "t1": 22.2,
+  "text": "Aber da oben vergeht die Zeit schneller."
+ },
+ {
+  "t0": 22.2,
+  "t1": 25.2,
+  "text": "38 Mikrosekunden pro Tag."
+ },
+ {
+  "t0": 25.45,
+  "t1": 27.6,
+  "text": "Ohne Einstein läge dein Navi"
+ },
+ {
+  "t0": 27.6,
+  "t1": 30.6,
+  "text": "jeden Tag 10 km daneben."
+ }
+]

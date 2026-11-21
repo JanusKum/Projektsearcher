@@ -1,0 +1,47 @@
+1
+00:00:00,450 --> 00:00:02,450
+Dein Handy weiß, wo du bist.
+
+2
+00:00:02,450 --> 00:00:04,750
+Auf wenige Meter genau.
+
+3
+00:00:05,000 --> 00:00:07,000
+Dafür fragt es Satelliten.
+
+4
+00:00:07,000 --> 00:00:09,750
+20.000 km über dir.
+
+5
+00:00:09,850 --> 00:00:11,650
+An Bord: Atomuhren.
+
+6
+00:00:11,650 --> 00:00:15,500
+Ihr Signal rast mit Lichtgeschwindigkeit zu dir.
+
+7
+00:00:15,650 --> 00:00:17,450
+Aus vier Laufzeiten berechnet
+
+8
+00:00:17,450 --> 00:00:19,250
+dein Handy, wo du stehst.
+
+9
+00:00:19,600 --> 00:00:22,200
+Aber da oben vergeht die Zeit schneller.
+
+10
+00:00:22,200 --> 00:00:25,200
+38 Mikrosekunden pro Tag.
+
+11
+00:00:25,450 --> 00:00:27,600
+Ohne Einstein läge dein Navi
+
+12
+00:00:27,600 --> 00:00:30,600
+jeden Tag 10 km daneben.
