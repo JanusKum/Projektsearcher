@@ -1,0 +1,45 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Profilbild Varianten</title>
+<style>@font-face{font-family:Jost;src:url(fonts/Jost.ttf) format('truetype');font-weight:100 900;}html,body{margin:0;background:#1D2052}svg{display:block}text{font-family:Jost,sans-serif}</style></head>
+<body><svg id="s" width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg"></svg>
+<script src="flat.js"></script><script src="pin.js"></script>
+<script>
+const V = new URLSearchParams(location.search).get('v') || '1';
+svg = document.getElementById('s'); defs = el('defs');
+const starsOut = (cx, cy, rr, seed, n = 90) => { const R = rng(seed); for (let i = 0; i < n; i++) { const x = R() * W, y = R() * H, k = R(); if (Math.hypot(x - cx, y - cy) < rr) continue; el('circle', { cx: r1(x), cy: r1(y), r: r1(k < .7 ? 2 + R() * 2 : 3.5 + R() * 2.5), fill: k < .55 ? C.mist : k < .85 ? C.cream : C.sun }); } };
+if (V === '1') {
+  // 1 · close-up: Pin's lens fills the frame, two hard glow rings, tiny planet reflected in the lens
+  el('rect', { width: W, height: H, fill: C.night }); starsOut(540, 540, 470, 11, 70);
+  halo(svg, 540, 600, 430, 500);
+  pin(svg, 540, 1250, 1150, { look: [0.15, 0.25], zoom: 0.6 });
+  // a planet with a ring reflected in the iris highlight
+  const px = 615, py = 520; el('ellipse', { cx: px, cy: py, rx: 34, ry: 10, fill: 'none', stroke: C.sun, 'stroke-width': 5, transform: `rotate(-18 ${px} ${py})` });
+  el('circle', { cx: px, cy: py, r: 16, fill: C.mint });
+}
+if (V === '2') {
+  // 2 · space: Pin flies round a ringed planet, dotted trail behind it
+  el('rect', { width: W, height: H, fill: C.night }); starsOut(540, 560, 380, 23, 110);
+  for (const [x, y, s, c] of [[170, 220, 20, C.cream], [900, 190, 15, C.sun], [880, 880, 18, C.cream], [180, 860, 13, C.sun]]) sparkle(svg, x, y, s, c);
+  const cx = 540, cy = 640;
+  halo(svg, cx, cy, 250, 300);
+  // ring behind
+  el('path', { d: `M${cx - 360},${cy} A360,95 -12 0 1 ${cx + 360},${cy}`, fill: 'none', stroke: C.sunD, 'stroke-width': 26, transform: `rotate(-12 ${cx} ${cy})`, 'stroke-linecap': 'round' });
+  twoTone(svg, 'circle', { cx, cy, r: 210 }, 40, 32, (G, dark) => {
+    el('circle', { cx, cy, r: 210, fill: dark ? C.blueD : C.blue }, G);
+    for (const [dy, h] of [[-110, 34], [-30, 46], [60, 30], [130, 24]]) el('rect', { x: cx - 260, y: cy + dy, width: 520, height: h, rx: h / 2, fill: dark ? C.mintD : C.mint }, G);
+  });
+  // ring in front
+  el('path', { d: `M${cx - 360},${cy} A360,95 -12 0 0 ${cx + 360},${cy}`, fill: 'none', stroke: C.sun, 'stroke-width': 26, transform: `rotate(-12 ${cx} ${cy})`, 'stroke-linecap': 'round' });
+  for (let i = 1; i < 10; i++) { const a = -2.4 + i * 0.09; el('circle', { cx: r1(cx + Math.cos(a) * 400), cy: r1(cy - 120 + Math.sin(a) * 400 * 0.55), r: r1(4 + i * 0.6), fill: C.cream }); }
+  pin(svg, 760, 470, 330, { look: [-0.4, 0.2], wave: 1, wavePh: 0.4, rot: 14 });
+}
+if (V === '3') {
+  // 3 · bold and simple: Pin centred on a mint disc, night ring, nothing else (reads at 40 px)
+  el('rect', { width: W, height: H, fill: C.night });
+  el('circle', { cx: 540, cy: 540, r: 470, fill: C.n2 }); el('circle', { cx: 540, cy: 540, r: 420, fill: C.n3 });
+  shaded(svg, 'circle', { cx: 540, cy: 540, r: 360 }, C.mint, C.mintD, 40, 34);
+  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; el('circle', { cx: r1(540 + Math.cos(a) * 395), cy: r1(540 + Math.sin(a) * 395), r: 7, fill: C.sun }); }
+  halo(svg, 540, 820, 30, 52); el('circle', { cx: 540, cy: 820, r: 18, fill: C.sun });
+  pin(svg, 540, 820, 600, { look: [0, 0.15] });
+}
+window.READY = true; window.DUR = 1; window.render = () => {};
+</script></body></html>
