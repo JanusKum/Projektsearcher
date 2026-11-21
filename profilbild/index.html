@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Profilbild</title>
+<style>@font-face{font-family:Jost;src:url(fonts/Jost.ttf) format('truetype');font-weight:100 900;}html,body{margin:0;background:#1D2052}svg{display:block}text{font-family:Jost,sans-serif}</style></head>
+<body><svg id="s" width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg"></svg>
+<script src="flat.js"></script><script src="pin.js"></script>
+<script>
+const V = new URLSearchParams(location.search).get('v') || 'b';
+svg = document.getElementById('s'); defs = el('defs');
+el('rect', { width: W, height: H, fill: C.night });
+// stars only outside the safe circle's centre area
+const R = rng(3);
+for (let i = 0; i < 90; i++) { const x = R() * W, y = R() * H, k = R(); if (Math.hypot(x - 540, y - 560) < 330) continue;
+  el('circle', { cx: r1(x), cy: r1(y), r: r1(k < .7 ? 2 + R() * 2 : 3.5 + R() * 2.5), fill: k < .55 ? C.mist : k < .85 ? C.cream : C.sun }); }
+for (const [x, y, s, c] of [[190, 240, 20, C.cream], [880, 300, 15, C.sun], [850, 840, 17, C.cream], [230, 820, 13, C.sun]]) sparkle(svg, x, y, s, c);
+const cx = 540, cy = 560;
+// orbit ring with a satellite marker + the Earth disc behind Pin
+el('circle', { cx, cy, r: 330, fill: 'none', stroke: C.mint, 'stroke-width': 6, 'stroke-dasharray': '3 20', 'stroke-linecap': 'round' });
+halo(svg, cx, cy + 150, 170, 215);
+twoTone(svg, 'circle', { cx, cy: cy + 150, r: 140 }, 28, 22, (G, dark) => {
+  el('circle', { cx, cy: cy + 150, r: 140, fill: dark ? C.blueD : C.blue }, G);
+  const Rr = rng(5);
+  for (const [dx, dy, rr] of [[-40, -30, 62], [60, 50, 48], [70, -70, 30], [-70, 80, 34]]) el('path', { d: blobPath(polar(cx + dx, cy + 150 + dy, 8, () => rr * (0.78 + 0.32 * Rr()))), fill: dark ? C.mintD : C.mint }, G);
+  el('rect', { x: cx - 100, y: cy + 90, width: 130, height: 18, rx: 9, fill: dark ? C.creamD : C.cream }, G);
+});
+// satellite at the top-right of the ring, with a dotted signal line down to Pin
+const sa = -0.78, sx = cx + Math.cos(sa) * 330, sy = cy + Math.sin(sa) * 330;
+for (let i = 1; i < 9; i++) { const k = i / 9; el('circle', { cx: r1(sx + (cx + 10 - sx) * k), cy: r1(sy + (cy - 150 - sy) * k), r: 7, fill: C.sun }); }
+{ const s = 44, G = g(svg, { transform: `translate(${r1(sx)},${r1(sy)}) rotate(40)` });
+  el('rect', { x: -s * 1.05, y: -s * .05, width: s * 2.1, height: s * .1, fill: C.mist }, G);
+  for (const k of [-1, 1]) { const px = k > 0 ? s * .42 : -s * 1.12; el('rect', { x: px, y: -s * .24, width: s * .7, height: s * .48, rx: s * .05, fill: C.blueD }, G); el('rect', { x: px, y: -s * .24, width: s * .7, height: s * .22, rx: s * .05, fill: C.blue }, G); }
+  shaded(G, 'rect', { x: -s * .3, y: -s * .3, width: s * .6, height: s * .6, rx: s * .12 }, C.cream, C.creamD, s * .1, s * .1);
+  el('circle', { cy: -s * .02, r: s * .1, fill: C.coral }, G); }
+// Pin standing on the Earth, looking at the viewer, smiling, one arm waving
+halo(svg, cx, cy + 40, 26, 46); el('circle', { cx, cy: cy + 40, r: 15, fill: C.sun });
+pin(svg, cx, cy + 40, 400, V === 'b' ? { look: [0.35, -0.5], zoom: 0.9, wave: 0 } : { look: [0, 0.1], smile: 0.9, wave: 1, wavePh: 0.6 });
+window.READY = true; window.DUR = 1; window.render = () => {};
+</script></body></html>
