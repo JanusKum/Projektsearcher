@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Profilbild neutral</title>
+<style>@font-face{font-family:Jost;src:url(fonts/Jost.ttf) format('truetype');font-weight:100 900;}html,body{margin:0;background:#1D2052}svg{display:block}text{font-family:Jost,sans-serif}</style></head>
+<body><svg id="s" width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg"></svg>
+<script src="flat.js"></script>
+<script>
+const V = new URLSearchParams(location.search).get('v') || '1';
+svg = document.getElementById('s'); defs = el('defs');
+if (V === '1') {
+  // 1 · monogram: a bold B on a sun disc, a coral spark at the corner — no topic, just you
+  el('rect', { width: W, height: H, fill: C.night });
+  halo(svg, 540, 540, 420, 480);
+  shaded(svg, 'circle', { cx: 540, cy: 540, r: 360 }, C.sun, C.sunD, 46, 40);
+  text(svg, 530, 690, 'B', { 'font-size': 470, 'font-weight': 800, fill: C.night, 'text-anchor': 'middle' });
+  sparkle(svg, 800, 300, 70, C.coral); sparkle(svg, 860, 420, 30, C.cream);
+}
+if (V === '2') {
+  // 2 · "?!" — the question and the aha in one mark
+  el('rect', { width: W, height: H, fill: C.night });
+  halo(svg, 540, 540, 420, 480);
+  shaded(svg, 'circle', { cx: 540, cy: 540, r: 360 }, C.mint, C.mintD, 46, 40);
+  text(svg, 460, 720, '?', { 'font-size': 520, 'font-weight': 800, fill: C.cream, 'text-anchor': 'middle' });
+  text(svg, 660, 720, '!', { 'font-size': 520, 'font-weight': 800, fill: C.sun, 'text-anchor': 'middle' });
+}
+if (V === '3') {
+  // 3 · the curious eye: one big eye looking up and to the side, as if it just noticed something
+  el('rect', { width: W, height: H, fill: C.coral });
+  el('circle', { cx: 540, cy: 540, r: 430, fill: C.coralD });
+  shaded(svg, 'circle', { cx: 540, cy: 560, r: 330 }, C.cream, C.creamD, 36, 30);
+  el('circle', { cx: 610, cy: 500, r: 175, fill: C.blue });
+  el('circle', { cx: 610, cy: 500, r: 85, fill: C.night });
+  el('circle', { cx: 560, cy: 450, r: 42, fill: C.cream });
+  el('path', { d: 'M260,230 Q540,120 820,230', fill: 'none', stroke: C.night, 'stroke-width': 34, 'stroke-linecap': 'round' });   // raised brow
+  sparkle(svg, 870, 330, 60, C.sun);
+}
+window.READY = true; window.DUR = 1; window.render = () => {};
+</script></body></html>
