@@ -1,0 +1,16 @@
+STILLE AUS MATHEMATIK — Credits
+
+Picture, signal, score and sound effects: made entirely in code for this film (Canvas 2D, numpy synthesis). No stock footage, samples or generated images.
+
+Fonts
+  JetBrains Mono — Copyright The JetBrains Mono Project Authors — SIL Open Font License 1.1 — https://github.com/google/fonts/tree/main/ofl/jetbrainsmono
+  STIX Two Text — Copyright The STIX Two Project Authors — SIL Open Font License 1.1 — https://github.com/google/fonts/tree/main/ofl/stixtwotext
+
+Voice
+  German narration: vidIQ AI voiceover, voice "Ben - Effortless and Casual". Check vidIQ's terms for the generated voiceover before commercial use.
+
+Software
+  Lemo-Opuscar film toolkit (render tools; Oscilloscope Math style) — https://github.com/lemomo-ai/lemo-opuscar (see its LICENSE)
+  numpy, scipy, soundfile, soxr (BSD/MIT-style licences), ffmpeg (LGPL/GPL)
+
+Facts and their sources: FACTS.md.

@@ -1,0 +1,47 @@
+1
+00:00:00,400 --> 00:00:02,200
+Deine Kopfhörer machen Lärm.
+
+2
+00:00:02,200 --> 00:00:04,200
+Damit du keinen hörst.
+
+3
+00:00:04,300 --> 00:00:07,600
+Das ist der Lärm um dich herum: eine Schallwelle.
+
+4
+00:00:07,800 --> 00:00:09,600
+Ein Mikrofon misst sie.
+
+5
+00:00:09,600 --> 00:00:11,600
+Tausende Male pro Sekunde.
+
+6
+00:00:11,800 --> 00:00:14,000
+Ein Chip baut daraus ihr Spiegelbild.
+
+7
+00:00:14,000 --> 00:00:16,600
+Wo sie steigt, fällt seine.
+
+8
+00:00:16,900 --> 00:00:20,200
+Beide zusammen ergeben: fast nichts.
+
+9
+00:00:20,600 --> 00:00:22,600
+Nur hohe Töne sind zu schnell für den Chip.
+
+10
+00:00:22,600 --> 00:00:25,000
+Die schluckt das Polster.
+
+11
+00:00:25,400 --> 00:00:27,200
+Stille ist hier keine Ruhe.
+
+12
+00:00:27,200 --> 00:00:30,300
+Sie ist Mathematik.
