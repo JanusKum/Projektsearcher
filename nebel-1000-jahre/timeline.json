@@ -1,0 +1,42 @@
+{
+  "bpm": 96,
+  "bar": 2.5,
+  "dur": 34.4,
+  "secs": [
+    { "id": "A_dorf",   "t": 0.0,   "bars": 2,   "era": "full" },
+    { "id": "B_jahr1",  "t": 5.0,   "bars": 2,   "era": "fog1" },
+    { "id": "C_jahr100","t": 10.0,  "bars": 2,   "era": "nes" },
+    { "id": "D_jahr500","t": 15.0,  "bars": 2,   "era": "moss4" },
+    { "id": "E_jahr1000","t": 20.0, "bars": 2,   "era": "faded" },
+    { "id": "stille",   "t": 25.0,  "bars": 0.5, "era": "faded" },
+    { "id": "F_flut",   "t": 26.25, "bars": 3,   "era": "full" }
+  ],
+  "hits": {
+    "musicBreak": 2.2,
+    "nebelHit": 2.5,
+    "cutB": 5.0,
+    "tiltB": 6.25,
+    "wilt": 7.5,
+    "mosaicC": 10.0,
+    "bell1": 10.0,
+    "bell2": 12.5,
+    "bell3": 13.75,
+    "cutD": 15.0,
+    "mosaicE": 20.0,
+    "invOpen": 20.4,
+    "cursorSun": 21.9,
+    "cursorStop": 22.5,
+    "silence": 25.0,
+    "breath": 26.25,
+    "sunFull": 28.75,
+    "childLine": 29.2,
+    "year1001": 31.9
+  },
+  "vo": {
+    "l1": 0.25,
+    "l2": 5.25,
+    "l3": 10.2,
+    "l4": 15.4,
+    "l5": 20.7
+  }
+}

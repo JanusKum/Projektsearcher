@@ -1,0 +1,28 @@
+Nebel · 1000 Jahre — Credits & Lizenzen
+
+ORIGINAL (für diesen Film in Code erstellt)
+- Alle Pixelgrafiken: Bauer, Laternenträger, Kind mit Kapuzenzipfel, Porträt, Dorf, Feld, Nebeldorf mit Wassernetzen
+  und Glockenturm, Pilz-Ruinen, Hügel, Fenster, Inventar, Handcursor (sprites.js, scenes.js, ui.js, main.js).
+- Musik: originale Chiptune-Komposition, mit numpy synthetisiert (music/score.py). Motiv und alle Melodien original.
+- Geräusche: alle synthetisiert (mix.py, mit Hilfsfunktionen aus der Lemo-Opuscar-Bibliothek core/audio/sfx.py).
+- Geschichte, Texte und Figuren: original.
+
+CODE AUS DER LEMO-OPUSCAR-BIBLIOTHEK (MIT-Lizenz, Copyright (c) 2026 Lemomo, github.com/lemomo-ai/lemo-opuscar)
+- px.js (indizierter Framebuffer, Bayer-Dither, Mosaik), font.js (variable Pixelschrift; hier um Ä Ö Ü ä ö ü ß … ergänzt):
+  übernommen aus dem Demo-Ordner des Stils „16-bit Pixel RPG“ und für das Hochformat angepasst.
+- Fensterrahmen, Dialogbox und Cursor in ui.js sowie der Aufbau von mix.py folgen demselben Demo.
+- Render-, Untertitel-, Lesezeit- und Mastering-Werkzeuge: core/render/ der Bibliothek.
+
+PALETTE
+- Grundpalette: ENDESGA 32 von ENDESGA (öffentliche Palette, lospec.com/palette-list/endesga-32), frei als Farbliste verwendet.
+- Nebel-, 8-bit-, Moos- und Verblasst-Tabellen: eigene Werte für diesen Film.
+
+STIMME
+- Erzähler: Microsoft Edge Neural TTS, Stimme de-DE-ChristophNeural, abgerufen über edge-tts (LGPL-3.0, github.com/rany2/edge-tts).
+  Die Sprachausgabe wird von Microsofts Online-Dienst erzeugt; für eine kommerzielle Nutzung die Bedingungen von Microsoft prüfen.
+
+WERKZEUGE
+- ffmpeg (statischer Build über das Python-Paket imageio-ffmpeg, BSD-2-Clause; ffmpeg selbst LGPL/GPL) zum Muxen und Mastern.
+- Playwright/Chromium zum Rendern der Einzelbilder.
+
+Es werden keine fremden Bilder, Schriften, Samples oder Aufnahmen verwendet.

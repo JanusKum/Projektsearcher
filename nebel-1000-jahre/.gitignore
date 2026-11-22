@@ -1,0 +1,6 @@
+.tools/
+out/
+stills/
+review/
+voice/.cache/
+events.json
