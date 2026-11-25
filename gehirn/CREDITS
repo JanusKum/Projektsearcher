@@ -1,0 +1,16 @@
+DEIN GEHIRN LÜGT — Credits
+
+Picture, score and sound effects: made entirely in code for this film (Canvas 2D + WebGL print shader, numpy synthesis). No stock footage, samples or generated images.
+
+Fonts
+  Anton — Copyright The Anton Project Authors — SIL Open Font License 1.1 — https://github.com/google/fonts/tree/main/ofl/anton
+  Archivo Black — Copyright The Archivo Black Project Authors — SIL Open Font License 1.1 — https://github.com/google/fonts/tree/main/ofl/archivoblack
+
+Voice
+  German narration: vidIQ AI voiceover, voice "Ben - Effortless and Casual". Check vidIQ's terms for the generated voiceover before commercial use.
+
+Software
+  Lemo-Opuscar film toolkit (render tools; Pop Art style and its four-plate print engine engine/pop.js) — https://github.com/lemomo-ai/lemo-opuscar (see its LICENSE)
+  numpy, scipy, soundfile, soxr (BSD/MIT-style licences), ffmpeg (LGPL/GPL)
+
+Facts and their sources: FACTS.md.
