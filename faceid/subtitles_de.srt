@@ -1,0 +1,43 @@
+1
+00:00:00,300 --> 00:00:02,800
+Jedes Mal, wenn du entsperrst,
+
+2
+00:00:02,800 --> 00:00:05,500
+schießt dir dein Handy 30.000 Laserpunkte ins Gesicht.
+
+3
+00:00:05,700 --> 00:00:07,900
+Unsichtbar. Infrarot.
+
+4
+00:00:08,100 --> 00:00:10,200
+Eine Kamera sieht, wie sich das Muster
+
+5
+00:00:10,200 --> 00:00:12,200
+über Nase und Wangen verbiegt.
+
+6
+00:00:12,400 --> 00:00:15,900
+Daraus baut ein Chip eine 3D-Karte deines Gesichts.
+
+7
+00:00:16,200 --> 00:00:19,000
+Ein Foto? Ist flach. Abgelehnt.
+
+8
+00:00:19,400 --> 00:00:21,400
+Dass ein Fremder dein Handy entsperrt:
+
+9
+00:00:21,400 --> 00:00:23,800
+eins zu einer Million.
+
+10
+00:00:24,000 --> 00:00:25,800
+Du siehst es nie.
+
+11
+00:00:25,800 --> 00:00:28,200
+Aber dein Handy sieht dich in 3D.

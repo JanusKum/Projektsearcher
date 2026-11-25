@@ -1,0 +1,16 @@
+FACE ID — Credits
+
+Picture, score and sound effects: made entirely in code for this film (Canvas 2D with a hand-written 3D projection, numpy synthesis). No stock footage, samples, scans or generated images. The face is a procedural model.
+
+Fonts
+  Rajdhani — Copyright Indian Type Foundry — SIL Open Font License 1.1 — https://github.com/google/fonts/tree/main/ofl/rajdhani
+  Share Tech Mono — Copyright Carrois Type Design — SIL Open Font License 1.1 — https://github.com/google/fonts/tree/main/ofl/sharetechmono
+
+Voice
+  German narration: vidIQ AI voiceover, voice "Ben - Effortless and Casual". Check vidIQ's terms for the generated voiceover before commercial use.
+
+Software
+  Lemo-Opuscar film toolkit (render tools; Sci-fi Hologram HUD style) — https://github.com/lemomo-ai/lemo-opuscar (see its LICENSE)
+  numpy, scipy, soundfile, soxr (BSD/MIT-style licences), ffmpeg (LGPL/GPL)
+
+"Face ID" is a trademark of Apple Inc.; the film explains the technique and shows no Apple product, logo or interface. Facts and their sources: FACTS.md.
