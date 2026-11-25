@@ -1,0 +1,16 @@
+HEISS UND KALT — Credits
+
+Picture, heat simulation, score and sound effects: made entirely in code for this film (Canvas 2D, numpy synthesis). No stock footage, samples or generated images.
+
+Fonts
+  IBM Plex Mono — Copyright IBM Corp. — SIL Open Font License 1.1 — https://github.com/google/fonts/tree/main/ofl/ibmplexmono
+  Inter — Copyright The Inter Project Authors — SIL Open Font License 1.1 — https://github.com/google/fonts/tree/main/ofl/inter
+
+Voice
+  German narration: vidIQ AI voiceover, voice "Ben - Effortless and Casual". Check vidIQ's terms for the generated voiceover before commercial use.
+
+Software
+  Lemo-Opuscar film toolkit (render tools; Thermal Camera style) — https://github.com/lemomo-ai/lemo-opuscar (see its LICENSE)
+  numpy, scipy, soundfile, soxr (BSD/MIT-style licences), ffmpeg (LGPL/GPL)
+
+Facts and their sources: FACTS.md.

@@ -1,0 +1,47 @@
+1
+00:00:00,450 --> 00:00:02,600
+Zwei Minuten Mikrowelle.
+
+2
+00:00:02,600 --> 00:00:04,600
+Außen kochend heiß, in der Mitte eiskalt.
+
+3
+00:00:04,600 --> 00:00:06,500
+Warum?
+
+4
+00:00:06,700 --> 00:00:09,400
+Schuld ist eine Welle, die stillsteht.
+
+5
+00:00:09,600 --> 00:00:11,400
+Ohne Drehteller siehst du sie:
+
+6
+00:00:11,400 --> 00:00:13,900
+heiße Punkte und kalte Lücken.
+
+7
+00:00:14,000 --> 00:00:15,900
+Immer sechs Zentimeter auseinander.
+
+8
+00:00:15,900 --> 00:00:18,100
+Eine halbe Wellenlänge.
+
+9
+00:00:18,300 --> 00:00:20,600
+Der Drehteller schiebt dein Essen durch diese Punkte.
+
+10
+00:00:20,600 --> 00:00:23,300
+Nur die Mitte bewegt sich nicht.
+
+11
+00:00:23,500 --> 00:00:25,400
+Darum bleibt sie kalt.
+
+12
+00:00:25,400 --> 00:00:28,600
+Leg dein Essen als Ring, dann wird alles heiß.
