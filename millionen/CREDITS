@@ -1,0 +1,19 @@
+EINE MILLION — Credits
+
+Picture, score and sound effects: made entirely in code for this film (Canvas 2D particles, numpy synthesis). No stock footage, samples or generated images.
+
+Map data
+  Natural Earth 1:110m land — public domain — https://www.naturalearthdata.com (via world-atlas 2.0.2, ISC licence, https://github.com/topojson/world-atlas); land/sea only, no borders
+  topojson-client 3.1.0 — ISC licence
+
+Font
+  Nunito — Copyright The Nunito Project Authors — SIL Open Font License 1.1 — https://github.com/google/fonts/tree/main/ofl/nunito
+
+Voice
+  German narration: vidIQ AI voiceover, voice "Ben - Effortless and Casual". Check vidIQ's terms for the generated voiceover before commercial use.
+
+Software
+  Lemo-Opuscar film toolkit (render tools; Firefly Pointillism style) — https://github.com/lemomo-ai/lemo-opuscar (see its LICENSE)
+  numpy, scipy, soundfile, soxr (BSD/MIT-style licences), ffmpeg (LGPL/GPL)
+
+SpaceX is named only as the applicant in a news report; no logo, product or likeness is shown. Facts and sources: FACTS.md.

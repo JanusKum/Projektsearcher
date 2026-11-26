@@ -1,0 +1,8 @@
+out/
+stills*/
+sheet*.jpg
+cs/
+contact.jpg
+.mux_tmp.wav
+node_modules/
+*.tmp.mp4
